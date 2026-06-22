@@ -122,8 +122,13 @@ set_item(
 
 
 # ----- Swap -----
-swap = psutil.swap_memory()
-swap_value = swap.percent / 100.0
+try:
+    swap = psutil.swap_memory()
+    swap_percent = swap.percent
+except OSError:
+    swap_percent = 0.0
+
+swap_value = swap_percent / 100.0
 
 swap_color, swap_fill = hot_color(swap_value, ORANGE, ORANGE_FILL)
 
@@ -140,7 +145,7 @@ set_item(
 set_item(
     "swap.value",
     {
-        "label": f"{swap.percent:3.0f}%",
+        "label": f"{swap_percent:3.0f}%",
         "label.color": TEXT if swap_value >= 0.65 else MUTED,
     },
 )

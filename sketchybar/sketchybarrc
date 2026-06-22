@@ -12,7 +12,7 @@ mkdir -p "$CONFIG_DIR/cache"
 BAR_BG=0x00000000
 MAIN_CELL=0x66003040
 PANEL=0x66002434
-PANEL_STRONG=0xaa002434
+PANEL_STRONG=0xcc00283a
 BORDER=0x44c77d47
 
 TEXT=0xffd6f3f0
@@ -23,6 +23,12 @@ BLUE=0xff89b4fa
 YELLOW=0xfff9e2af
 RED=0xfff38ba8
 ORANGE=0xffc77d47
+TZ_BLUE=0xffa6c8ff
+TZ_GREEN=0xffb9f6ca
+TZ_ORANGE=0xffffb86c
+TZ_CYAN=0xff9bf6ff
+TZ_NEUTRAL=0xffd0dce0
+TZ_RED=0xffff9db4
 
 BAR_HEIGHT=120
 BAR_RADIUS=20
@@ -31,7 +37,7 @@ STAT_RADIUS=12
 STAT_ITEM_GAP=20
 STAT_LABEL_Y_OFFSET=47
 CLOCK_TILE_HEIGHT=$STAT_TILE_HEIGHT
-MUSIC_GAP=20
+MUSIC_GAP=30
 MUSIC_CONTROL_WIDTH=46
 MUSIC_LEFT_INSET=18
 MUSIC_RIGHT_INSET=$MUSIC_LEFT_INSET
@@ -62,7 +68,7 @@ sketchybar --bar \
   corner_radius=$BAR_RADIUS \
   border_width=0 \
   blur_radius=0 \
-  padding_left=142 \
+  padding_left=260 \
   padding_right=322 \
   sticky=on \
   topmost=window \
@@ -87,7 +93,7 @@ sketchybar --default \
 # Selectable secondary timezone. Click opens popup.
 sketchybar --add item clock.left left \
   --set clock.left \
-    width=150 \
+    width=132 \
     icon="AZ ▾" \
     label="--:--" \
     icon.font="Hack Nerd Font:Bold:12.0" \
@@ -96,11 +102,11 @@ sketchybar --add item clock.left left \
     label.color=$TEXT \
     icon.align=center \
     label.align=center \
-    icon.y_offset=21 \
+    icon.y_offset=28 \
     label.y_offset=-10 \
     background.drawing=off \
-    padding_left=10 \
-    padding_right=4 \
+    padding_left=8 \
+    padding_right=2 \
     popup.drawing=off \
     popup.horizontal=off \
     popup.height=34 \
@@ -114,7 +120,7 @@ sketchybar --add item clock.left left \
 # Primary Arizona clock.
 sketchybar --add item clock left \
   --set clock \
-    width=285 \
+    width=255 \
     icon="SUN  JUN 21" \
     label="12:52 PM" \
     icon.font="Hack Nerd Font:Bold:14.0" \
@@ -126,8 +132,8 @@ sketchybar --add item clock left \
     icon.y_offset=26 \
     label.y_offset=-7 \
     background.drawing=off \
-    padding_left=4 \
-    padding_right=10 \
+    padding_left=2 \
+    padding_right=8 \
     script="$PLUGIN_DIR/clock.sh" \
     update_freq=5 \
     click_script="open -a Calendar"
@@ -156,42 +162,50 @@ TZ_POPUP_COMMON=(
 sketchybar --add item clock.tz.et popup.clock.left \
   --set clock.tz.et "${TZ_POPUP_COMMON[@]}" \
     label="Eastern" \
-    click_script="$PLUGIN_DIR/clock_select.sh America/New_York ET $BLUE"
+    label.color=$TZ_BLUE \
+    click_script="$PLUGIN_DIR/clock_select.sh America/New_York ET $TZ_BLUE"
 
 sketchybar --add item clock.tz.ct popup.clock.left \
   --set clock.tz.ct "${TZ_POPUP_COMMON[@]}" \
     label="Central" \
-    click_script="$PLUGIN_DIR/clock_select.sh America/Chicago CT $GREEN"
+    label.color=$TZ_GREEN \
+    click_script="$PLUGIN_DIR/clock_select.sh America/Chicago CT $TZ_GREEN"
 
 sketchybar --add item clock.tz.mt popup.clock.left \
   --set clock.tz.mt "${TZ_POPUP_COMMON[@]}" \
     label="Mountain" \
+    label.color=$YELLOW \
     click_script="$PLUGIN_DIR/clock_select.sh America/Denver MT $YELLOW"
 
 sketchybar --add item clock.tz.pt popup.clock.left \
   --set clock.tz.pt "${TZ_POPUP_COMMON[@]}" \
     label="Pacific" \
-    click_script="$PLUGIN_DIR/clock_select.sh America/Los_Angeles PT $ORANGE"
+    label.color=$TZ_ORANGE \
+    click_script="$PLUGIN_DIR/clock_select.sh America/Los_Angeles PT $TZ_ORANGE"
 
 sketchybar --add item clock.tz.az popup.clock.left \
   --set clock.tz.az "${TZ_POPUP_COMMON[@]}" \
     label="Arizona" \
-    click_script="$PLUGIN_DIR/clock_select.sh America/Phoenix AZ $CYAN"
+    label.color=$TZ_CYAN \
+    click_script="$PLUGIN_DIR/clock_select.sh America/Phoenix AZ $TZ_CYAN"
 
 sketchybar --add item clock.tz.utc popup.clock.left \
   --set clock.tz.utc "${TZ_POPUP_COMMON[@]}" \
     label="UTC" \
-    click_script="$PLUGIN_DIR/clock_select.sh UTC UTC $MUTED"
+    label.color=$TZ_NEUTRAL \
+    click_script="$PLUGIN_DIR/clock_select.sh UTC UTC $TZ_NEUTRAL"
 
 sketchybar --add item clock.tz.london popup.clock.left \
   --set clock.tz.london "${TZ_POPUP_COMMON[@]}" \
     label="London" \
-    click_script="$PLUGIN_DIR/clock_select.sh Europe/London LDN $BLUE"
+    label.color=$TZ_BLUE \
+    click_script="$PLUGIN_DIR/clock_select.sh Europe/London LDN $TZ_BLUE"
 
 sketchybar --add item clock.tz.tokyo popup.clock.left \
   --set clock.tz.tokyo "${TZ_POPUP_COMMON[@]}" \
     label="Tokyo" \
-    click_script="$PLUGIN_DIR/clock_select.sh Asia/Tokyo TYO $RED"
+    label.color=$TZ_RED \
+    click_script="$PLUGIN_DIR/clock_select.sh Asia/Tokyo TYO $TZ_RED"
 
 sketchybar --add event clock_update
 sketchybar --subscribe clock clock_update
@@ -263,22 +277,14 @@ sketchybar --add item music.play left \
     padding_right=0 \
     click_script="nowplaying-cli togglePlayPause"
 
-sketchybar --add item music left \
-  --set music \
+sketchybar --add item music.play_next_gap left \
+  --set music.play_next_gap \
+    width=$MUSIC_BUTTON_GAP \
     icon.drawing=off \
-    label="Nothing playing" \
-    width=$MUSIC_TRACK_WIDTH \
-    label.font="Hack Nerd Font:Bold:17.0" \
-    label.max_chars=$MUSIC_PAGE_CHARS \
-    label.width=$MUSIC_LABEL_WIDTH \
-    label.align=left \
-    label.padding_left=8 \
-    label.padding_right=12 \
-    scroll_texts=off \
+    label.drawing=off \
     background.drawing=off \
     padding_left=0 \
-    padding_right=2 \
-    click_script='open -a "Amazon Music"'
+    padding_right=0
 
 sketchybar --add item music.next left \
   --set music.next \
@@ -298,6 +304,41 @@ sketchybar --add item music.next left \
     padding_right=0 \
     click_script="nowplaying-cli next"
 
+sketchybar --add item music.artist left \
+  --set music.artist \
+    icon.drawing=off \
+    label="Now Playing" \
+    width=0 \
+    label.font="Hack Nerd Font:Bold:16.0" \
+    label.max_chars=$MUSIC_PAGE_CHARS \
+    label.width=$MUSIC_LABEL_WIDTH \
+    label.align=left \
+    label.padding_left=8 \
+    label.padding_right=12 \
+    label.y_offset=10 \
+    label.color=$TEXT \
+    background.drawing=off \
+    padding_left=0 \
+    padding_right=0
+
+sketchybar --add item music left \
+  --set music \
+    icon.drawing=off \
+    label="Nothing playing" \
+    width=$MUSIC_TRACK_WIDTH \
+    label.font="Hack Nerd Font:Bold:16.0" \
+    label.max_chars=$MUSIC_PAGE_CHARS \
+    label.width=$MUSIC_LABEL_WIDTH \
+    label.align=left \
+    label.padding_left=8 \
+    label.padding_right=12 \
+    label.y_offset=-11 \
+    scroll_texts=off \
+    background.drawing=off \
+    padding_left=0 \
+    padding_right=2 \
+    click_script='open -a "Amazon Music"'
+
 sketchybar --add item music.right_pad left \
   --set music.right_pad \
     width=$MUSIC_RIGHT_INSET \
@@ -307,7 +348,7 @@ sketchybar --add item music.right_pad left \
     padding_left=0 \
     padding_right=0
 
-sketchybar --add bracket music.tile music.left_pad music.prev music.prev_play_gap music.play music music.next music.right_pad \
+sketchybar --add bracket music.tile music.left_pad music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.right_pad \
   --set music.tile \
     background.color=$PANEL_STRONG \
     background.height=$MUSIC_TRACK_HEIGHT \
@@ -324,7 +365,7 @@ sketchybar --set music \
 # SWP | 20px | MEM | 20px | CPU.
 
 # CPU graph, rightmost / largest.
-sketchybar --add graph cpu.total right 350 \
+sketchybar --add graph cpu.total right 351 \
   --set cpu.total \
     icon.drawing=off \
     label.drawing=off \
@@ -334,7 +375,7 @@ sketchybar --add graph cpu.total right 350 \
     graph.color=$CYAN \
     graph.fill_color=0x337bdff2 \
     graph.line_width=1.5 \
-    padding_left=0 \
+    padding_left=-1 \
     padding_right=0
 
 sketchybar --add item gap.mem_cpu right \
@@ -347,7 +388,7 @@ sketchybar --add item gap.mem_cpu right \
     padding_right=0
 
 # MEM graph, middle.
-sketchybar --add graph mem.graph right 250 \
+sketchybar --add graph mem.graph right 251 \
   --set mem.graph \
     icon.drawing=off \
     label.drawing=off \
@@ -357,7 +398,7 @@ sketchybar --add graph mem.graph right 250 \
     graph.color=$BLUE \
     graph.fill_color=0x3389b4fa \
     graph.line_width=1.5 \
-    padding_left=0 \
+    padding_left=-1 \
     padding_right=0
 
 sketchybar --add item gap.swap_mem right \
@@ -370,7 +411,7 @@ sketchybar --add item gap.swap_mem right \
     padding_right=0
 
 # SWP graph, leftmost of stats cluster.
-sketchybar --add graph swap.graph right 250 \
+sketchybar --add graph swap.graph right 251 \
   --set swap.graph \
     icon.drawing=off \
     label.drawing=off \
@@ -380,7 +421,7 @@ sketchybar --add graph swap.graph right 250 \
     graph.color=$ORANGE \
     graph.fill_color=0x33c77d47 \
     graph.line_width=1.5 \
-    padding_left=0 \
+    padding_left=-1 \
     padding_right=0
 
 # Tile backgrounds.
@@ -410,7 +451,7 @@ sketchybar --add bracket swap.tile swap.graph \
 
 # Fitted external backing. The real bar is transparent; this bracket tracks the
 # first/last visible objects without adding extra end padding.
-sketchybar --add bracket main.tile clock.left clock gap.clock_music music.left_pad music.prev music.prev_play_gap music.play music music.next music.right_pad swap.graph gap.swap_mem mem.graph gap.mem_cpu cpu.total \
+sketchybar --add bracket main.tile clock.left clock gap.clock_music music.left_pad music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.right_pad swap.graph gap.swap_mem mem.graph gap.mem_cpu cpu.total \
   --set main.tile \
     background.color=$MAIN_CELL \
     background.height=$STAT_TILE_HEIGHT \

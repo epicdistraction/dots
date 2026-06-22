@@ -5,14 +5,14 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:/bin:/usr/bin:/usr/sbin:/sbin"
 TEXT=0xffd6f3f0
 MUTED=0xff82a9ad
 CYAN=0xff7bdff2
-PANEL_STRONG=0xaa002434
-PANEL_PAUSED=0x66002434
+PANEL_STRONG=0xcc00283a
 
 CONFIG_DIR="${CONFIG_DIR:-$HOME/.config/sketchybar}"
 CACHE_DIR="$CONFIG_DIR/cache"
 PAGE_STATE="$CACHE_DIR/music_page_state"
 PAGE_CHARS=46
 PAGE_OVERLAP=8
+ARTIST_CHARS=46
 
 NP="$(command -v nowplaying-cli || true)"
 
@@ -58,16 +58,32 @@ page_label() {
   printf '%s' "$text" | cut -c $((start + 1))-$((start + PAGE_CHARS))
 }
 
+clip_text() {
+  local text="$1"
+  local limit="$2"
+  local len=${#text}
+
+  if [ "$len" -le "$limit" ]; then
+    printf '%s' "$text"
+    return
+  fi
+
+  printf '%s...' "$(printf '%s' "$text" | cut -c 1-$((limit - 3)))"
+}
+
 if [ -z "$NP" ]; then
   reset_page_state
   sketchybar --set music.play \
     icon="♪" \
     icon.color=$MUTED \
+    --set music.artist \
+    label="Now Playing" \
+    label.color=$TEXT \
     --set music \
     label="install: brew install nowplaying-cli" \
-    label.color=$MUTED \
+    label.color=$TEXT \
     --set music.tile \
-    background.color=$PANEL_PAUSED
+    background.color=$PANEL_STRONG
   exit 0
 fi
 
@@ -80,34 +96,39 @@ if [ -z "$TITLE" ] || [ "$TITLE" = "(null)" ]; then
   sketchybar --set music.play \
     icon="♪" \
     icon.color=$MUTED \
+    --set music.artist \
+    label="Now Playing" \
+    label.color=$TEXT \
     --set music \
     label="Nothing playing" \
-    label.color=$MUTED \
+    label.color=$TEXT \
     --set music.tile \
-    background.color=$PANEL_PAUSED
+    background.color=$PANEL_STRONG
   exit 0
 fi
 
-ICON="▶"
+ICON="⏸"
 BG="$PANEL_STRONG"
 if [ "$RATE" = "0" ] || [ "$RATE" = "0.0" ]; then
-  ICON="⏸"
-  BG="$PANEL_PAUSED"
+  ICON="▶"
 fi
 
 if [ -n "$ARTIST" ] && [ "$ARTIST" != "(null)" ]; then
-  LABEL="$ARTIST — $TITLE"
+  DISPLAY_ARTIST="$(clip_text "$ARTIST" "$ARTIST_CHARS")"
 else
-  LABEL="$TITLE"
+  DISPLAY_ARTIST="Unknown Artist"
 fi
 
-DISPLAY_LABEL="$(page_label "$LABEL")"
+DISPLAY_TITLE="$(page_label "$TITLE")"
 
 sketchybar --set music.play \
   icon="$ICON" \
   icon.color=$CYAN \
+  --set music.artist \
+  label="$DISPLAY_ARTIST" \
+  label.color=$TEXT \
   --set music \
-  label="$DISPLAY_LABEL" \
+  label="$DISPLAY_TITLE" \
   label.color=$TEXT \
   --set music.tile \
   background.color=$BG
