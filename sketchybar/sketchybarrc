@@ -358,7 +358,7 @@ sketchybar --add bracket music.tile music.left_pad music.prev music.prev_play_ga
 
 sketchybar --set music \
   script="$PLUGIN_DIR/music.sh" \
-  update_freq=2
+  update_freq=4
 
 ##### Right cluster: graph-only stats with anchored overlays #####
 # Add right-side graphs/gaps in this order so visible order is:

@@ -9,23 +9,24 @@ PANEL_STRONG=0xcc00283a
 
 CONFIG_DIR="${CONFIG_DIR:-$HOME/.config/sketchybar}"
 CACHE_DIR="$CONFIG_DIR/cache"
-PAGE_STATE="$CACHE_DIR/music_page_state"
+PAGE_STATE="$CACHE_DIR/music_title_page_state"
+ARTIST_PAGE_STATE="$CACHE_DIR/music_artist_page_state"
 PAGE_CHARS=46
 PAGE_OVERLAP=8
-ARTIST_CHARS=46
 
 NP="$(command -v nowplaying-cli || true)"
 
 reset_page_state() {
-  rm -f "$PAGE_STATE"
+  rm -f "$PAGE_STATE" "$ARTIST_PAGE_STATE"
 }
 
 page_label() {
-  local text="$1"
+  local state_file="$1"
+  local text="$2"
   local len=${#text}
 
   if [ "$len" -le "$PAGE_CHARS" ]; then
-    reset_page_state
+    rm -f "$state_file"
     printf '%s' "$text"
     return
   fi
@@ -40,15 +41,15 @@ page_label() {
   local page=0
 
   sig="$(printf '%s' "$text" | cksum | awk '{print $1 ":" $2}')"
-  if [ -f "$PAGE_STATE" ]; then
-    IFS='|' read -r last_sig last_page < "$PAGE_STATE"
+  if [ -f "$state_file" ]; then
+    IFS='|' read -r last_sig last_page < "$state_file"
   fi
 
   if [ "$sig" = "$last_sig" ]; then
     page=$(( (last_page + 1) % page_count ))
   fi
 
-  printf '%s|%s\n' "$sig" "$page" > "$PAGE_STATE"
+  printf '%s|%s\n' "$sig" "$page" > "$state_file"
 
   local start=$((page * step))
   if [ $((start + PAGE_CHARS)) -gt "$len" ]; then
@@ -56,19 +57,6 @@ page_label() {
   fi
 
   printf '%s' "$text" | cut -c $((start + 1))-$((start + PAGE_CHARS))
-}
-
-clip_text() {
-  local text="$1"
-  local limit="$2"
-  local len=${#text}
-
-  if [ "$len" -le "$limit" ]; then
-    printf '%s' "$text"
-    return
-  fi
-
-  printf '%s...' "$(printf '%s' "$text" | cut -c 1-$((limit - 3)))"
 }
 
 if [ -z "$NP" ]; then
@@ -114,12 +102,12 @@ if [ "$RATE" = "0" ] || [ "$RATE" = "0.0" ]; then
 fi
 
 if [ -n "$ARTIST" ] && [ "$ARTIST" != "(null)" ]; then
-  DISPLAY_ARTIST="$(clip_text "$ARTIST" "$ARTIST_CHARS")"
+  DISPLAY_ARTIST="$(page_label "$ARTIST_PAGE_STATE" "$ARTIST")"
 else
   DISPLAY_ARTIST="Unknown Artist"
 fi
 
-DISPLAY_TITLE="$(page_label "$TITLE")"
+DISPLAY_TITLE="$(page_label "$PAGE_STATE" "$TITLE")"
 
 sketchybar --set music.play \
   icon="$ICON" \
