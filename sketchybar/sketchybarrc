@@ -10,7 +10,7 @@ mkdir -p "$CONFIG_DIR/cache"
 # Palette sampled toward your terminal/window theme:
 # deep teal base, pale cyan text, copper/warm wallpaper accent.
 BAR_BG=0x00000000
-MAIN_CELL=0x66003040
+MAIN_CELL=transparent
 PANEL=0x66002434
 PANEL_STRONG=0xcc00283a
 BORDER=0x44c77d47
@@ -59,8 +59,8 @@ MUSIC_CONTROL_HEIGHT=$STAT_TILE_HEIGHT
 MUSIC_BUTTON_HEIGHT=72
 MUSIC_BUTTON_RADIUS=12
 MUSIC_BUTTON_BG=0x33000000
-MUSIC_TRACK_WIDTH=375
-MUSIC_LABEL_WIDTH=330
+MUSIC_TRACK_WIDTH=330
+MUSIC_LABEL_WIDTH=285
 MUSIC_TRACK_HEIGHT=$STAT_TILE_HEIGHT
 MUSIC_RADIUS=$STAT_RADIUS
 MUSIC_PAGE_CHARS=60
@@ -113,61 +113,6 @@ sketchybar --add item music.left_pad left \
     background.drawing=off \
     padding_left=0 \
     padding_right=0
-
-sketchybar --add item music.volume left \
-  --set music.volume \
-    width=$MUSIC_VOLUME_WIDTH \
-    icon.drawing=off \
-    label.drawing=off \
-    background.drawing=off \
-    padding_left=0 \
-    padding_right=0 \
-    popup.drawing=on \
-    popup.horizontal=off \
-    popup.align=center \
-    popup.height=$MUSIC_VOLUME_POPUP_HEIGHT \
-    popup.y_offset=$MUSIC_VOLUME_POPUP_Y_OFFSET \
-    popup.background.drawing=off
-
-sketchybar --add item music.volume_gap left \
-  --set music.volume_gap \
-    width=$MUSIC_VOLUME_GAP \
-    icon.drawing=off \
-    label.drawing=off \
-    background.drawing=off \
-    padding_left=0 \
-    padding_right=0
-
-VOLUME_POPUP_COMMON=(
-  width=$MUSIC_VOLUME_WIDTH
-  icon.font="Apple Color Emoji:Regular:12.0"
-  icon.width=$MUSIC_VOLUME_WIDTH
-  icon.align=center
-  icon.padding_left=0
-  icon.padding_right=0
-  label.drawing=off
-  background.drawing=on
-  background.color=$MUSIC_BUTTON_BG
-  background.height=$MUSIC_VOLUME_BUTTON_HEIGHT
-  background.corner_radius=$MUSIC_VOLUME_BUTTON_RADIUS
-  padding_left=0
-  padding_right=0
-)
-
-sketchybar --add item music.volume.full popup.music.volume \
-  --set music.volume.full "${VOLUME_POPUP_COMMON[@]}" \
-    icon="🔊" \
-    click_script="$VOLUME_FULL_SCRIPT"
-
-sketchybar --add item music.volume.half popup.music.volume \
-  --set music.volume.half "${VOLUME_POPUP_COMMON[@]}" \
-    icon="🔉" \
-    click_script="$VOLUME_HALF_SCRIPT"
-
-sketchybar --add item music.volume.mute popup.music.volume \
-  --set music.volume.mute "${VOLUME_POPUP_COMMON[@]}" \
-    icon="🔇" \
-    click_script="$VOLUME_MUTE_SCRIPT"
 
 sketchybar --add item music.prev left \
   --set music.prev \
@@ -276,6 +221,61 @@ sketchybar --add item music left \
     padding_right=2 \
     click_script='open -a "Amazon Music"'
 
+sketchybar --add item music.volume_gap left \
+  --set music.volume_gap \
+    width=$MUSIC_VOLUME_GAP \
+    icon.drawing=off \
+    label.drawing=off \
+    background.drawing=off \
+    padding_left=0 \
+    padding_right=0
+
+sketchybar --add item music.volume left \
+  --set music.volume \
+    width=$MUSIC_VOLUME_WIDTH \
+    icon.drawing=off \
+    label.drawing=off \
+    background.drawing=off \
+    padding_left=0 \
+    padding_right=0 \
+    popup.drawing=on \
+    popup.horizontal=off \
+    popup.align=center \
+    popup.height=$MUSIC_VOLUME_POPUP_HEIGHT \
+    popup.y_offset=$MUSIC_VOLUME_POPUP_Y_OFFSET \
+    popup.background.drawing=off
+
+VOLUME_POPUP_COMMON=(
+  width=$MUSIC_VOLUME_WIDTH
+  icon.font="Apple Color Emoji:Regular:12.0"
+  icon.width=$MUSIC_VOLUME_WIDTH
+  icon.align=center
+  icon.padding_left=0
+  icon.padding_right=0
+  label.drawing=off
+  background.drawing=on
+  background.color=$MUSIC_BUTTON_BG
+  background.height=$MUSIC_VOLUME_BUTTON_HEIGHT
+  background.corner_radius=$MUSIC_VOLUME_BUTTON_RADIUS
+  padding_left=0
+  padding_right=0
+)
+
+sketchybar --add item music.volume.full popup.music.volume \
+  --set music.volume.full "${VOLUME_POPUP_COMMON[@]}" \
+    icon="🔊" \
+    click_script="$VOLUME_FULL_SCRIPT"
+
+sketchybar --add item music.volume.half popup.music.volume \
+  --set music.volume.half "${VOLUME_POPUP_COMMON[@]}" \
+    icon="🔉" \
+    click_script="$VOLUME_HALF_SCRIPT"
+
+sketchybar --add item music.volume.mute popup.music.volume \
+  --set music.volume.mute "${VOLUME_POPUP_COMMON[@]}" \
+    icon="🔇" \
+    click_script="$VOLUME_MUTE_SCRIPT"
+
 sketchybar --add item music.right_pad left \
   --set music.right_pad \
     width=$MUSIC_RIGHT_INSET \
@@ -285,7 +285,7 @@ sketchybar --add item music.right_pad left \
     padding_left=0 \
     padding_right=0
 
-sketchybar --add bracket music.tile music.left_pad music.volume music.volume_gap music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.right_pad \
+sketchybar --add bracket music.tile music.left_pad music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.volume_gap music.volume music.right_pad \
   --set music.tile \
     background.color=$PANEL_STRONG \
     background.height=$MUSIC_TRACK_HEIGHT \
@@ -608,7 +608,7 @@ sketchybar --add bracket swap.tile swap.graph \
 
 # Fitted external backing. The real bar is transparent; this bracket tracks the
 # first/last visible objects without adding extra end padding.
-sketchybar --add bracket main.tile music.left_pad music.volume music.volume_gap music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.right_pad gap.clock_music clock.left clock.date clock swap.graph gap.swap_mem mem.graph gap.mem_cpu cpu.total \
+sketchybar --add bracket main.tile music.left_pad music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.volume_gap music.volume music.right_pad gap.clock_music clock.left clock.date clock swap.graph gap.swap_mem mem.graph gap.mem_cpu cpu.total \
   --set main.tile \
     background.color=$MAIN_CELL \
     background.height=$STAT_TILE_HEIGHT \
