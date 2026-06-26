@@ -32,7 +32,6 @@ IFS='|' read -r LEFT_TZ LEFT_LABEL LEFT_COLOR <<< "$LEFT_SPEC"
 PRIMARY_DAY="$(fmt_day "$PRIMARY_TZ")"
 PRIMARY_DATE="$(fmt_month_day "$PRIMARY_TZ")"
 PRIMARY_TIME="$(fmt_time "$PRIMARY_TZ")"
-LEFT_TIME="$(fmt_time "$LEFT_TZ")"
 
 sketchybar --set clock \
   label="$PRIMARY_TIME" \
@@ -45,10 +44,18 @@ sketchybar --set clock.day \
   label="$PRIMARY_DATE" \
   label.color=$CYAN
 
-sketchybar --set clock.left \
-  label="$LEFT_TIME" \
-  label.color=$TEXT
+if [ "$LEFT_TZ" = "STOPWATCH" ]; then
+  "$CONFIG_DIR/plugins/stopwatch.sh" refresh
+else
+  LEFT_TIME="$(fmt_time "$LEFT_TZ")"
 
-sketchybar --set clock.left.tz \
-  label="$LEFT_LABEL ▾" \
-  label.color="$LEFT_COLOR"
+  sketchybar --set clock.left \
+    label="$LEFT_TIME" \
+    label.color=$TEXT
+
+  sketchybar --set clock.left.tz \
+    label="$LEFT_LABEL ▾" \
+    label.color="$LEFT_COLOR"
+
+  "$CONFIG_DIR/plugins/stopwatch.sh" refresh
+fi

@@ -47,6 +47,12 @@ MUSIC_CONTROL_WIDTH=46
 MUSIC_LEFT_INSET=18
 MUSIC_RIGHT_INSET=$MUSIC_LEFT_INSET
 MUSIC_BUTTON_GAP=5
+MUSIC_VOLUME_WIDTH=34
+MUSIC_VOLUME_GAP=7
+MUSIC_VOLUME_BUTTON_HEIGHT=34
+MUSIC_VOLUME_BUTTON_RADIUS=8
+MUSIC_VOLUME_POPUP_HEIGHT=40
+MUSIC_VOLUME_POPUP_Y_OFFSET=130
 MUSIC_PREV_WIDTH=46
 MUSIC_PLAY_WIDTH=64
 MUSIC_CONTROL_HEIGHT=$STAT_TILE_HEIGHT
@@ -58,6 +64,10 @@ MUSIC_LABEL_WIDTH=330
 MUSIC_TRACK_HEIGHT=$STAT_TILE_HEIGHT
 MUSIC_RADIUS=$STAT_RADIUS
 MUSIC_PAGE_CHARS=60
+VOLUME_FULL_SCRIPT="osascript -e 'set volume output muted false' -e 'set volume output volume 75'"
+VOLUME_HALF_SCRIPT="osascript -e 'set volume output muted false' -e 'set volume output volume 40'"
+VOLUME_MUTE_SCRIPT="osascript -e 'set volume output volume 0' -e 'set volume output muted true'"
+STOPWATCH_MENU_TIME_X_MIN=$((340 + 260 + MUSIC_LEFT_INSET + MUSIC_VOLUME_WIDTH + MUSIC_VOLUME_GAP + MUSIC_PREV_WIDTH + MUSIC_BUTTON_GAP + MUSIC_PLAY_WIDTH + MUSIC_BUTTON_GAP + MUSIC_CONTROL_WIDTH + MUSIC_TRACK_WIDTH + MUSIC_RIGHT_INSET + MUSIC_GAP + 60))
 
 # Clear all items on reload.
 sketchybar --remove '/.*/' 2>/dev/null
@@ -103,6 +113,61 @@ sketchybar --add item music.left_pad left \
     background.drawing=off \
     padding_left=0 \
     padding_right=0
+
+sketchybar --add item music.volume left \
+  --set music.volume \
+    width=$MUSIC_VOLUME_WIDTH \
+    icon.drawing=off \
+    label.drawing=off \
+    background.drawing=off \
+    padding_left=0 \
+    padding_right=0 \
+    popup.drawing=on \
+    popup.horizontal=off \
+    popup.align=center \
+    popup.height=$MUSIC_VOLUME_POPUP_HEIGHT \
+    popup.y_offset=$MUSIC_VOLUME_POPUP_Y_OFFSET \
+    popup.background.drawing=off
+
+sketchybar --add item music.volume_gap left \
+  --set music.volume_gap \
+    width=$MUSIC_VOLUME_GAP \
+    icon.drawing=off \
+    label.drawing=off \
+    background.drawing=off \
+    padding_left=0 \
+    padding_right=0
+
+VOLUME_POPUP_COMMON=(
+  width=$MUSIC_VOLUME_WIDTH
+  icon.font="Apple Color Emoji:Regular:12.0"
+  icon.width=$MUSIC_VOLUME_WIDTH
+  icon.align=center
+  icon.padding_left=0
+  icon.padding_right=0
+  label.drawing=off
+  background.drawing=on
+  background.color=$MUSIC_BUTTON_BG
+  background.height=$MUSIC_VOLUME_BUTTON_HEIGHT
+  background.corner_radius=$MUSIC_VOLUME_BUTTON_RADIUS
+  padding_left=0
+  padding_right=0
+)
+
+sketchybar --add item music.volume.full popup.music.volume \
+  --set music.volume.full "${VOLUME_POPUP_COMMON[@]}" \
+    icon="🔊" \
+    click_script="$VOLUME_FULL_SCRIPT"
+
+sketchybar --add item music.volume.half popup.music.volume \
+  --set music.volume.half "${VOLUME_POPUP_COMMON[@]}" \
+    icon="🔉" \
+    click_script="$VOLUME_HALF_SCRIPT"
+
+sketchybar --add item music.volume.mute popup.music.volume \
+  --set music.volume.mute "${VOLUME_POPUP_COMMON[@]}" \
+    icon="🔇" \
+    click_script="$VOLUME_MUTE_SCRIPT"
 
 sketchybar --add item music.prev left \
   --set music.prev \
@@ -220,7 +285,7 @@ sketchybar --add item music.right_pad left \
     padding_left=0 \
     padding_right=0
 
-sketchybar --add bracket music.tile music.left_pad music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.right_pad \
+sketchybar --add bracket music.tile music.left_pad music.volume music.volume_gap music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.right_pad \
   --set music.tile \
     background.color=$PANEL_STRONG \
     background.height=$MUSIC_TRACK_HEIGHT \
@@ -289,7 +354,8 @@ sketchybar --add item clock.month left \
     padding_left=0 \
     padding_right=0
 
-# Selectable secondary timezone. Click opens popup.
+# Selectable secondary timezone label. Its text is drawn separately from the
+# time value; clock_left_click.sh keeps the lower label band mode-independent.
 sketchybar --add item clock.left.tz left \
   --set clock.left.tz \
     icon.drawing=off \
@@ -304,7 +370,8 @@ sketchybar --add item clock.left.tz left \
     label.padding_right=-14 \
     background.drawing=off \
     padding_left=0 \
-    padding_right=0
+    padding_right=0 \
+    click_script="sketchybar --set clock.left popup.drawing=toggle"
 
 sketchybar --add item clock.left left \
   --set clock.left \
@@ -329,7 +396,7 @@ sketchybar --add item clock.left left \
     popup.background.corner_radius=14 \
     script="$PLUGIN_DIR/clock.sh" \
     update_freq=5 \
-    click_script="sketchybar --set clock.left popup.drawing=toggle"
+    click_script="$PLUGIN_DIR/clock_left_click.sh"
 
 sketchybar --add item clock.date left \
   --set clock.date \
@@ -424,11 +491,26 @@ sketchybar --add item clock.tz.london popup.clock.left \
     label.color=$TZ_BLUE \
     click_script="$PLUGIN_DIR/clock_select.sh Europe/London LDN $TZ_BLUE"
 
+sketchybar --add item clock.tz.china popup.clock.left \
+  --set clock.tz.china "${TZ_POPUP_COMMON[@]}" \
+    label="China" \
+    label.color=$TZ_RED \
+    click_script="$PLUGIN_DIR/clock_select.sh Asia/Shanghai CHN $TZ_RED"
+
 sketchybar --add item clock.tz.tokyo popup.clock.left \
   --set clock.tz.tokyo "${TZ_POPUP_COMMON[@]}" \
     label="Tokyo" \
     label.color=$TZ_RED \
     click_script="$PLUGIN_DIR/clock_select.sh Asia/Tokyo TYO $TZ_RED"
+
+sketchybar --add item clock.tz.stopwatch popup.clock.left \
+  --set clock.tz.stopwatch "${TZ_POPUP_COMMON[@]}" \
+    label="WATCH 00:00" \
+    label.color=$GREEN \
+    updates=when_shown \
+    update_freq=0 \
+    script="$PLUGIN_DIR/stopwatch.sh" \
+    click_script="STOPWATCH_MENU_TIME_X_MIN=$STOPWATCH_MENU_TIME_X_MIN $PLUGIN_DIR/stopwatch.sh menu_click"
 
 sketchybar --add event clock_update
 sketchybar --subscribe clock clock_update
@@ -526,7 +608,7 @@ sketchybar --add bracket swap.tile swap.graph \
 
 # Fitted external backing. The real bar is transparent; this bracket tracks the
 # first/last visible objects without adding extra end padding.
-sketchybar --add bracket main.tile music.left_pad music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.right_pad gap.clock_music clock.left clock.date clock swap.graph gap.swap_mem mem.graph gap.mem_cpu cpu.total \
+sketchybar --add bracket main.tile music.left_pad music.volume music.volume_gap music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.right_pad gap.clock_music clock.left clock.date clock swap.graph gap.swap_mem mem.graph gap.mem_cpu cpu.total \
   --set main.tile \
     background.color=$MAIN_CELL \
     background.height=$STAT_TILE_HEIGHT \
