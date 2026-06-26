@@ -18,25 +18,37 @@ fmt_time() {
   TZ="$1" date '+%-I:%M %p'
 }
 
-fmt_date() {
-  TZ="$1" date '+%a  %b %-d' | tr '[:lower:]' '[:upper:]'
+fmt_day() {
+  TZ="$1" date '+%a' | tr '[:lower:]' '[:upper:]'
+}
+
+fmt_month_day() {
+  TZ="$1" date '+%b %-d' | tr '[:lower:]' '[:upper:]'
 }
 
 LEFT_SPEC="$(cat "$LEFT_FILE")"
 IFS='|' read -r LEFT_TZ LEFT_LABEL LEFT_COLOR <<< "$LEFT_SPEC"
 
-PRIMARY_DATE="$(fmt_date "$PRIMARY_TZ")"
+PRIMARY_DAY="$(fmt_day "$PRIMARY_TZ")"
+PRIMARY_DATE="$(fmt_month_day "$PRIMARY_TZ")"
 PRIMARY_TIME="$(fmt_time "$PRIMARY_TZ")"
 LEFT_TIME="$(fmt_time "$LEFT_TZ")"
 
 sketchybar --set clock \
-  icon="$PRIMARY_DATE" \
   label="$PRIMARY_TIME" \
-  icon.color=$CYAN \
   label.color=$TEXT
 
+sketchybar --set clock.day \
+  label="$PRIMARY_DAY" \
+  label.color=$CYAN \
+  --set clock.month \
+  label="$PRIMARY_DATE" \
+  label.color=$CYAN
+
 sketchybar --set clock.left \
-  icon="$LEFT_LABEL ▾" \
   label="$LEFT_TIME" \
-  icon.color="$LEFT_COLOR" \
   label.color=$TEXT
+
+sketchybar --set clock.left.tz \
+  label="$LEFT_LABEL ▾" \
+  label.color="$LEFT_COLOR"

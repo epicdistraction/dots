@@ -11,7 +11,7 @@ CONFIG_DIR="${CONFIG_DIR:-$HOME/.config/sketchybar}"
 CACHE_DIR="$CONFIG_DIR/cache"
 PAGE_STATE="$CACHE_DIR/music_title_page_state"
 ARTIST_PAGE_STATE="$CACHE_DIR/music_artist_page_state"
-PAGE_CHARS=46
+PAGE_CHARS=60
 PAGE_OVERLAP=8
 
 NP="$(command -v nowplaying-cli || true)"

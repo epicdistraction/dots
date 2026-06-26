@@ -12,3 +12,56 @@ end
 
 -- Hotkey: Cmd + Ctrl + Alt + B
 hs.hotkey.bind({"cmd", "alt"}, "B", sendFocusedWindowToBack)
+
+-- Toggle between the current app and the previously foreground app.
+-- Bound to the ISO §/± key, usually keyCode 10 on Mac keyboards.
+
+local currentApp = hs.application.frontmostApplication()
+local previousApp = nil
+
+local function sameApp(a, b)
+  return a and b and a:pid() == b:pid()
+end
+
+local appWatcher = hs.application.watcher.new(function(appName, eventType, app)
+  if eventType ~= hs.application.watcher.activated then
+    return
+  end
+
+  if not app then
+    return
+  end
+
+  if currentApp and not sameApp(currentApp, app) then
+    previousApp = currentApp
+  end
+
+  currentApp = app
+end)
+
+appWatcher:start()
+
+local function bringPreviousApp()
+  if previousApp and previousApp:isRunning() then
+    previousApp:activate()
+  else
+    hs.alert.show("No previous app")
+  end
+end
+
+local previousAppKey = hs.eventtap.new(
+  { hs.eventtap.event.types.keyDown },
+  function(event)
+    local keyCode = event:getKeyCode()
+
+    -- ISO §/± key is usually keyCode 10
+    if keyCode == 10 then
+      bringPreviousApp()
+      return true
+    end
+
+    return false
+  end
+)
+
+previousAppKey:start()

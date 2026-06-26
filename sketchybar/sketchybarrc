@@ -30,14 +30,19 @@ TZ_CYAN=0xff9bf6ff
 TZ_NEUTRAL=0xffd0dce0
 TZ_RED=0xffff9db4
 
-BAR_HEIGHT=120
+BAR_HEIGHT=140
 BAR_RADIUS=20
-STAT_TILE_HEIGHT=120
+STAT_TILE_HEIGHT=140
 STAT_RADIUS=12
 STAT_ITEM_GAP=20
-STAT_LABEL_Y_OFFSET=47
+STAT_LABEL_TOP_INSET=18
+STAT_LABEL_Y_OFFSET=$((STAT_TILE_HEIGHT / 2 - STAT_LABEL_TOP_INSET))
 CLOCK_TILE_HEIGHT=$STAT_TILE_HEIGHT
-MUSIC_GAP=30
+CLOCK_LEFT_WIDTH=165
+CLOCK_DATE_WIDTH=82
+CLOCK_TIME_WIDTH=180
+CLOCK_VPN_WIDTH=$((CLOCK_LEFT_WIDTH + CLOCK_DATE_WIDTH + CLOCK_TIME_WIDTH))
+MUSIC_GAP=20
 MUSIC_CONTROL_WIDTH=46
 MUSIC_LEFT_INSET=18
 MUSIC_RIGHT_INSET=$MUSIC_LEFT_INSET
@@ -48,11 +53,11 @@ MUSIC_CONTROL_HEIGHT=$STAT_TILE_HEIGHT
 MUSIC_BUTTON_HEIGHT=72
 MUSIC_BUTTON_RADIUS=12
 MUSIC_BUTTON_BG=0x33000000
-MUSIC_TRACK_WIDTH=393
-MUSIC_LABEL_WIDTH=373
+MUSIC_TRACK_WIDTH=375
+MUSIC_LABEL_WIDTH=330
 MUSIC_TRACK_HEIGHT=$STAT_TILE_HEIGHT
 MUSIC_RADIUS=$STAT_RADIUS
-MUSIC_PAGE_CHARS=46
+MUSIC_PAGE_CHARS=60
 
 # Clear all items on reload.
 sketchybar --remove '/.*/' 2>/dev/null
@@ -88,140 +93,7 @@ sketchybar --default \
   label.padding_left=4 \
   label.padding_right=4
 
-##### Left cluster: integrated two-clock pill #####
-
-# Selectable secondary timezone. Click opens popup.
-sketchybar --add item clock.left left \
-  --set clock.left \
-    width=132 \
-    icon="AZ ▾" \
-    label="--:--" \
-    icon.font="Hack Nerd Font:Bold:12.0" \
-    label.font="Hack Nerd Font:Bold:20.0" \
-    icon.color=$BLUE \
-    label.color=$TEXT \
-    icon.align=center \
-    label.align=center \
-    icon.y_offset=28 \
-    label.y_offset=-10 \
-    background.drawing=off \
-    padding_left=8 \
-    padding_right=2 \
-    popup.drawing=off \
-    popup.horizontal=off \
-    popup.height=34 \
-    popup.blur_radius=20 \
-    popup.background.color=$PANEL_STRONG \
-    popup.background.corner_radius=14 \
-    script="$PLUGIN_DIR/clock.sh" \
-    update_freq=5 \
-    click_script="sketchybar --set clock.left popup.drawing=toggle"
-
-# Primary Arizona clock.
-sketchybar --add item clock left \
-  --set clock \
-    width=255 \
-    icon="SUN  JUN 21" \
-    label="12:52 PM" \
-    icon.font="Hack Nerd Font:Bold:14.0" \
-    label.font="Hack Nerd Font:Bold:35.0" \
-    icon.color=$CYAN \
-    label.color=$TEXT \
-    icon.align=center \
-    label.align=center \
-    icon.y_offset=26 \
-    label.y_offset=-7 \
-    background.drawing=off \
-    padding_left=2 \
-    padding_right=8 \
-    script="$PLUGIN_DIR/clock.sh" \
-    update_freq=5 \
-    click_script="open -a Calendar"
-
-# One shared visible clock background.
-sketchybar --add bracket clock.tile clock.left clock \
-  --set clock.tile \
-    background.color=$PANEL_STRONG \
-    background.height=$CLOCK_TILE_HEIGHT \
-    background.corner_radius=17 \
-    background.border_width=1 \
-    background.border_color=$BORDER
-
-# Popup timezone options.
-TZ_POPUP_COMMON=(
-  icon.drawing=off
-  width=170
-  label.font="Hack Nerd Font:Bold:13.0"
-  label.color=$TEXT
-  label.align=left
-  background.height=28
-  background.corner_radius=8
-  background.color=0x22000000
-)
-
-sketchybar --add item clock.tz.et popup.clock.left \
-  --set clock.tz.et "${TZ_POPUP_COMMON[@]}" \
-    label="Eastern" \
-    label.color=$TZ_BLUE \
-    click_script="$PLUGIN_DIR/clock_select.sh America/New_York ET $TZ_BLUE"
-
-sketchybar --add item clock.tz.ct popup.clock.left \
-  --set clock.tz.ct "${TZ_POPUP_COMMON[@]}" \
-    label="Central" \
-    label.color=$TZ_GREEN \
-    click_script="$PLUGIN_DIR/clock_select.sh America/Chicago CT $TZ_GREEN"
-
-sketchybar --add item clock.tz.mt popup.clock.left \
-  --set clock.tz.mt "${TZ_POPUP_COMMON[@]}" \
-    label="Mountain" \
-    label.color=$YELLOW \
-    click_script="$PLUGIN_DIR/clock_select.sh America/Denver MT $YELLOW"
-
-sketchybar --add item clock.tz.pt popup.clock.left \
-  --set clock.tz.pt "${TZ_POPUP_COMMON[@]}" \
-    label="Pacific" \
-    label.color=$TZ_ORANGE \
-    click_script="$PLUGIN_DIR/clock_select.sh America/Los_Angeles PT $TZ_ORANGE"
-
-sketchybar --add item clock.tz.az popup.clock.left \
-  --set clock.tz.az "${TZ_POPUP_COMMON[@]}" \
-    label="Arizona" \
-    label.color=$TZ_CYAN \
-    click_script="$PLUGIN_DIR/clock_select.sh America/Phoenix AZ $TZ_CYAN"
-
-sketchybar --add item clock.tz.utc popup.clock.left \
-  --set clock.tz.utc "${TZ_POPUP_COMMON[@]}" \
-    label="UTC" \
-    label.color=$TZ_NEUTRAL \
-    click_script="$PLUGIN_DIR/clock_select.sh UTC UTC $TZ_NEUTRAL"
-
-sketchybar --add item clock.tz.london popup.clock.left \
-  --set clock.tz.london "${TZ_POPUP_COMMON[@]}" \
-    label="London" \
-    label.color=$TZ_BLUE \
-    click_script="$PLUGIN_DIR/clock_select.sh Europe/London LDN $TZ_BLUE"
-
-sketchybar --add item clock.tz.tokyo popup.clock.left \
-  --set clock.tz.tokyo "${TZ_POPUP_COMMON[@]}" \
-    label="Tokyo" \
-    label.color=$TZ_RED \
-    click_script="$PLUGIN_DIR/clock_select.sh Asia/Tokyo TYO $TZ_RED"
-
-sketchybar --add event clock_update
-sketchybar --subscribe clock clock_update
-sketchybar --subscribe clock.left clock_update
-
 ##### Left cluster: music #####
-
-# Gap between clock pill and music controls.
-sketchybar --add item gap.clock_music left \
-  --set gap.clock_music \
-    width=$MUSIC_GAP \
-    icon.drawing=off \
-    label.drawing=off \
-    background.drawing=off \
-    padding_left=0 \
-    padding_right=0
 
 sketchybar --add item music.left_pad left \
   --set music.left_pad \
@@ -360,6 +232,209 @@ sketchybar --set music \
   script="$PLUGIN_DIR/music.sh" \
   update_freq=4
 
+# Gap between music controls and clock pill.
+sketchybar --add item gap.clock_music left \
+  --set gap.clock_music \
+    width=$MUSIC_GAP \
+    icon.drawing=off \
+    label.drawing=off \
+    background.drawing=off \
+    padding_left=0 \
+    padding_right=0
+
+##### Left cluster: integrated two-clock pill #####
+
+sketchybar --add item clock.vpn left \
+  --set clock.vpn \
+    icon.drawing=off \
+    label="Mullvad ..." \
+    width=0 \
+    label.font="Hack Nerd Font:Bold:15.0" \
+    label.max_chars=44 \
+    label.width=$CLOCK_VPN_WIDTH \
+    label.align=center \
+    label.color=$TEXT \
+    label.y_offset=-43 \
+    background.drawing=off \
+    padding_left=0 \
+    padding_right=0 \
+    script="$PLUGIN_DIR/mullvad.sh" \
+    update_freq=10
+
+sketchybar --add item clock.day left \
+  --set clock.day \
+    icon.drawing=off \
+    label="MON" \
+    width=0 \
+    label.font="Hack Nerd Font:Bold:18.0" \
+    label.width=$CLOCK_VPN_WIDTH \
+    label.align=center \
+    label.color=$CYAN \
+    label.y_offset=28 \
+    background.drawing=off \
+    padding_left=0 \
+    padding_right=0
+
+sketchybar --add item clock.month left \
+  --set clock.month \
+    icon.drawing=off \
+    label="JUN 22" \
+    width=0 \
+    label.font="Hack Nerd Font:Bold:18.0" \
+    label.width=$CLOCK_VPN_WIDTH \
+    label.align=center \
+    label.color=$CYAN \
+    label.y_offset=-10 \
+    background.drawing=off \
+    padding_left=0 \
+    padding_right=0
+
+# Selectable secondary timezone. Click opens popup.
+sketchybar --add item clock.left.tz left \
+  --set clock.left.tz \
+    icon.drawing=off \
+    label="AZ ▾" \
+    width=0 \
+    label.font="Hack Nerd Font:Bold:17.0" \
+    label.width=$CLOCK_LEFT_WIDTH \
+    label.align=center \
+    label.color=$BLUE \
+    label.y_offset=-9 \
+    label.padding_left=14 \
+    label.padding_right=-14 \
+    background.drawing=off \
+    padding_left=0 \
+    padding_right=0
+
+sketchybar --add item clock.left left \
+  --set clock.left \
+    width=$CLOCK_LEFT_WIDTH \
+    icon.drawing=off \
+    label="--:--" \
+    label.font="Hack Nerd Font:Bold:24.0" \
+    label.color=$TEXT \
+    label.width=$CLOCK_LEFT_WIDTH \
+    label.align=center \
+    label.y_offset=18 \
+    label.padding_left=0 \
+    label.padding_right=0 \
+    background.drawing=off \
+    padding_left=14 \
+    padding_right=0 \
+    popup.drawing=off \
+    popup.horizontal=off \
+    popup.height=34 \
+    popup.blur_radius=20 \
+    popup.background.color=$PANEL_STRONG \
+    popup.background.corner_radius=14 \
+    script="$PLUGIN_DIR/clock.sh" \
+    update_freq=5 \
+    click_script="sketchybar --set clock.left popup.drawing=toggle"
+
+sketchybar --add item clock.date left \
+  --set clock.date \
+    width=$CLOCK_DATE_WIDTH \
+    icon.drawing=off \
+    label.drawing=off \
+    background.drawing=off \
+    padding_left=-18 \
+    padding_right=0 \
+    click_script="$PLUGIN_DIR/mullvad.sh click"
+
+# Primary Arizona clock.
+sketchybar --add item clock left \
+  --set clock \
+    width=$CLOCK_TIME_WIDTH \
+    icon.drawing=off \
+    label="12:52 PM" \
+    label.font="Hack Nerd Font:Bold:37.0" \
+    label.color=$TEXT \
+    label.width=$CLOCK_TIME_WIDTH \
+    label.align=center \
+    label.y_offset=11 \
+    label.padding_left=0 \
+    label.padding_right=0 \
+    background.drawing=off \
+    padding_left=0 \
+    padding_right=8 \
+    script="$PLUGIN_DIR/clock.sh" \
+    update_freq=5 \
+    click_script="open -a Calendar"
+
+# One shared visible clock background.
+sketchybar --add bracket clock.tile clock.left clock.date clock \
+  --set clock.tile \
+    background.color=$PANEL_STRONG \
+    background.height=$CLOCK_TILE_HEIGHT \
+    background.corner_radius=17 \
+    background.border_width=1 \
+    background.border_color=$BORDER
+
+# Popup timezone options.
+TZ_POPUP_COMMON=(
+  icon.drawing=off
+  width=170
+  label.font="Hack Nerd Font:Bold:15.0"
+  label.color=$TEXT
+  label.align=left
+  background.height=28
+  background.corner_radius=8
+  background.color=0x22000000
+)
+
+sketchybar --add item clock.tz.et popup.clock.left \
+  --set clock.tz.et "${TZ_POPUP_COMMON[@]}" \
+    label="Eastern" \
+    label.color=$TZ_BLUE \
+    click_script="$PLUGIN_DIR/clock_select.sh America/New_York ET $TZ_BLUE"
+
+sketchybar --add item clock.tz.ct popup.clock.left \
+  --set clock.tz.ct "${TZ_POPUP_COMMON[@]}" \
+    label="Central" \
+    label.color=$TZ_GREEN \
+    click_script="$PLUGIN_DIR/clock_select.sh America/Chicago CT $TZ_GREEN"
+
+sketchybar --add item clock.tz.mt popup.clock.left \
+  --set clock.tz.mt "${TZ_POPUP_COMMON[@]}" \
+    label="Mountain" \
+    label.color=$YELLOW \
+    click_script="$PLUGIN_DIR/clock_select.sh America/Denver MT $YELLOW"
+
+sketchybar --add item clock.tz.pt popup.clock.left \
+  --set clock.tz.pt "${TZ_POPUP_COMMON[@]}" \
+    label="Pacific" \
+    label.color=$TZ_ORANGE \
+    click_script="$PLUGIN_DIR/clock_select.sh America/Los_Angeles PT $TZ_ORANGE"
+
+sketchybar --add item clock.tz.az popup.clock.left \
+  --set clock.tz.az "${TZ_POPUP_COMMON[@]}" \
+    label="Arizona" \
+    label.color=$TZ_CYAN \
+    click_script="$PLUGIN_DIR/clock_select.sh America/Phoenix AZ $TZ_CYAN"
+
+sketchybar --add item clock.tz.utc popup.clock.left \
+  --set clock.tz.utc "${TZ_POPUP_COMMON[@]}" \
+    label="UTC" \
+    label.color=$TZ_NEUTRAL \
+    click_script="$PLUGIN_DIR/clock_select.sh UTC UTC $TZ_NEUTRAL"
+
+sketchybar --add item clock.tz.london popup.clock.left \
+  --set clock.tz.london "${TZ_POPUP_COMMON[@]}" \
+    label="London" \
+    label.color=$TZ_BLUE \
+    click_script="$PLUGIN_DIR/clock_select.sh Europe/London LDN $TZ_BLUE"
+
+sketchybar --add item clock.tz.tokyo popup.clock.left \
+  --set clock.tz.tokyo "${TZ_POPUP_COMMON[@]}" \
+    label="Tokyo" \
+    label.color=$TZ_RED \
+    click_script="$PLUGIN_DIR/clock_select.sh Asia/Tokyo TYO $TZ_RED"
+
+sketchybar --add event clock_update
+sketchybar --subscribe clock clock_update
+sketchybar --subscribe clock.left clock_update
+sketchybar --subscribe clock.vpn clock_update
+
 ##### Right cluster: graph-only stats with anchored overlays #####
 # Add right-side graphs/gaps in this order so visible order is:
 # SWP | 20px | MEM | 20px | CPU.
@@ -451,7 +526,7 @@ sketchybar --add bracket swap.tile swap.graph \
 
 # Fitted external backing. The real bar is transparent; this bracket tracks the
 # first/last visible objects without adding extra end padding.
-sketchybar --add bracket main.tile clock.left clock gap.clock_music music.left_pad music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.right_pad swap.graph gap.swap_mem mem.graph gap.mem_cpu cpu.total \
+sketchybar --add bracket main.tile music.left_pad music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.right_pad gap.clock_music clock.left clock.date clock swap.graph gap.swap_mem mem.graph gap.mem_cpu cpu.total \
   --set main.tile \
     background.color=$MAIN_CELL \
     background.height=$STAT_TILE_HEIGHT \
