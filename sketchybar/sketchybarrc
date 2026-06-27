@@ -36,7 +36,8 @@ STAT_TILE_HEIGHT=140
 STAT_RADIUS=12
 STAT_ITEM_GAP=20
 STAT_LABEL_TOP_INSET=8
-STAT_LABEL_Y_OFFSET=$((STAT_TILE_HEIGHT / 2 - STAT_LABEL_TOP_INSET))
+STAT_LABEL_DOWN_SHIFT=110
+STAT_LABEL_Y_OFFSET=$((STAT_TILE_HEIGHT / 2 - STAT_LABEL_TOP_INSET - STAT_LABEL_DOWN_SHIFT))
 STAT_PILL_BG=0xff182c2f
 STAT_PILL_HEIGHT=15
 STAT_PILL_Y_OFFSET=$((STAT_LABEL_Y_OFFSET + 2))
@@ -306,7 +307,7 @@ sketchybar --add bracket music.tile music.left_pad music.prev music.prev_play_ga
   --set music.tile \
     background.color=$PANEL_STRONG \
     background.height=$MUSIC_TRACK_HEIGHT \
-    background.corner_radius=$MUSIC_RADIUS \
+    background.corner_radius=$STAT_RADIUS \
     background.border_width=0 \
     background.border_color=0x00000000
 
@@ -382,7 +383,7 @@ sketchybar --add item clock.left.tz left \
     label.width=$CLOCK_LEFT_WIDTH \
     label.align=center \
     label.color=$BLUE \
-    label.y_offset=-9 \
+    label.y_offset=-6 \
     label.padding_left=14 \
     label.padding_right=-14 \
     background.drawing=off \
@@ -399,7 +400,7 @@ sketchybar --add item clock.left left \
     label.color=$TEXT \
     label.width=$CLOCK_LEFT_WIDTH \
     label.align=center \
-    label.y_offset=18 \
+    label.y_offset=22 \
     label.padding_left=0 \
     label.padding_right=0 \
     background.drawing=off \
@@ -450,7 +451,7 @@ sketchybar --add bracket clock.tile clock.left clock.date clock \
   --set clock.tile \
     background.color=$PANEL_STRONG \
     background.height=$CLOCK_TILE_HEIGHT \
-    background.corner_radius=17 \
+    background.corner_radius=$STAT_RADIUS \
     background.border_width=0 \
     background.border_color=0x00000000
 
