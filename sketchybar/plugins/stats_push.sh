@@ -5,7 +5,7 @@ export LC_ALL=C
 
 CONFIG_DIR="${CONFIG_DIR:-$HOME/.config/sketchybar}"
 CACHE_DIR="$CONFIG_DIR/cache"
-STATE_FILE="${STATS_SWAP_STATE_FILE:-$CACHE_DIR/stats_swapouts.state}"
+STATE_FILE="${STATS_SWAP_STATE_FILE:-$CACHE_DIR/stats_swap_used_5m.state}"
 SKETCHYBAR="${SKETCHYBAR:-$(command -v sketchybar 2>/dev/null)}"
 
 [ -n "$SKETCHYBAR" ] || SKETCHYBAR="/opt/homebrew/bin/sketchybar"
@@ -21,6 +21,14 @@ YELLOW="0xfff9e2af"
 YELLOW_FILL="0x33f9e2af"
 RED="0xfff38ba8"
 RED_FILL="0x33f38ba8"
+
+STAT_LABEL_CHAR_WIDTH=6
+STAT_PILL_X_PADDING=2
+STAT_CPU_LABEL_WIDTH_TRIM=8
+STAT_CPU_GRAPH_WIDTH=351
+STAT_SMALL_GRAPH_WIDTH=251
+SWAP_DELTA_WINDOW_SECONDS=300
+SWAP_STATE_RETENTION_SECONDS=900
 
 print_mode="${1:-}"
 
@@ -51,6 +59,27 @@ hot_colors() {
 
 push_graph() {
   "$SKETCHYBAR" --push "$1" "$(clamp01 "$2")" >/dev/null 2>&1
+}
+
+stat_label_width() {
+  local label="$1"
+  local graph_width="$2"
+  local trim="${3:-0}"
+  local label_width
+
+  label_width=$((${#label} * STAT_LABEL_CHAR_WIDTH + 2 * STAT_PILL_X_PADDING - trim))
+  if [ "$label_width" -gt "$graph_width" ]; then
+    label_width=$graph_width
+  fi
+
+  printf '%s' "$label_width"
+}
+
+stat_label_offset() {
+  local label_width="$1"
+  local graph_width="$2"
+
+  printf '%s' "$((-(graph_width + label_width) / 2))"
 }
 
 vm_stat_output="$(vm_stat 2>/dev/null)"
@@ -182,27 +211,11 @@ swap_fields="$(
 )"
 read swap_value swap_used_g <<<"$swap_fields"
 
-swap_counter="$(
-  printf '%s\n' "$vm_stat_output" | awk '
-    function clean_number(value) {
-      gsub(/[^0-9]/, "", value)
-      return value
-    }
-    /^Swapouts:/ {
-      swapouts = clean_number($0)
-      swapouts_found = 1
-    }
-    /^Pageouts:/ {
-      pageouts = clean_number($0)
-      pageouts_found = 1
-    }
-    END {
-      if (swapouts_found) print swapouts
-      else if (pageouts_found) print pageouts
-    }'
-)"
+swap_used_mib="$(awk -v used="$swap_used_g" 'BEGIN {
+  printf "%.0f", (used + 0) * 1024
+}')"
 
-swap_out_rate=0
+swap_delta_mib=0
 now="$(date +%s 2>/dev/null)"
 
 is_print_mode=0
@@ -213,53 +226,51 @@ case "$print_mode" in
 esac
 
 write_swap_state() {
-  printf '%s %s\n' "$swap_counter" "$now" >"$STATE_FILE" 2>/dev/null
+  {
+    if [ -r "$STATE_FILE" ]; then
+      awk -v now="$now" -v retention="$SWAP_STATE_RETENTION_SECONDS" '
+        NF >= 2 &&
+        $1 ~ /^[0-9]+$/ &&
+        $2 ~ /^-?[0-9]+$/ &&
+        now >= $1 &&
+        now - $1 <= retention {
+          print $1, $2
+        }' "$STATE_FILE"
+    fi
+    printf '%s %s\n' "$now" "$swap_used_mib"
+  } >"$STATE_FILE.tmp" 2>/dev/null && mv "$STATE_FILE.tmp" "$STATE_FILE" 2>/dev/null
 }
 
-if [ -n "$swap_counter" ] && [ -n "$now" ]; then
+if [ -n "$swap_used_mib" ] && [ -n "$now" ]; then
   if [ -r "$STATE_FILE" ]; then
-    read previous_counter previous_time _ <"$STATE_FILE"
-    swap_state_result="$(
-      awk -v counter="$swap_counter" -v previous="$previous_counter" \
-          -v now="$now" -v previous_time="$previous_time" 'BEGIN {
-        if (counter !~ /^[0-9]+$/ || previous !~ /^[0-9]+$/ ||
-            now !~ /^[0-9]+$/ || previous_time !~ /^[0-9]+$/) {
-          print "invalid 0"
-          exit
+    swap_delta_mib="$(
+      awk -v now="$now" \
+          -v current="$swap_used_mib" \
+          -v window="$SWAP_DELTA_WINDOW_SECONDS" '
+        NF >= 2 &&
+        $1 ~ /^[0-9]+$/ &&
+        $2 ~ /^-?[0-9]+$/ {
+          age = now - $1
+          if (age >= window && (!found || age < best_age)) {
+            baseline = $2
+            best_age = age
+            found = 1
+          }
         }
-
-        delta = counter - previous
-        elapsed = now - previous_time
-        if (elapsed <= 0) {
-          print "elapsed_invalid 0"
-        } else if (delta < 0) {
-          print "counter_reset 0"
-        } else {
-          rate = delta / elapsed
-          if (rate < 0) rate = 0
-          printf "ok %.0f", rate
-        }
-      }'
+        END {
+          if (found) printf "%.0f", current - baseline
+          else printf "0"
+        }' "$STATE_FILE"
     )"
-    read swap_state_status swap_out_rate <<<"$swap_state_result"
+  fi
 
-    case "$swap_state_status" in
-      ok)
-        if [ "$is_print_mode" -eq 0 ]; then
-          write_swap_state
-        fi
-        ;;
-      counter_reset)
-        write_swap_state
-        ;;
-    esac
-  else
+  if [ "$is_print_mode" -eq 0 ]; then
     write_swap_state
   fi
 fi
 
-swap_label="$(awk -v used="$swap_used_g" -v rate="$swap_out_rate" 'BEGIN {
-  printf "SWP %.1fG O %.0f/s", used + 0, rate + 0
+swap_label="$(awk -v used="$swap_used_g" -v delta="$swap_delta_mib" 'BEGIN {
+  printf "SWP %.1fG %+dM/5m", used + 0, delta + 0
 }')"
 
 read swap_color swap_fill <<<"$(hot_colors "$swap_value" "$ORANGE" "$ORANGE_FILL")"
@@ -283,14 +294,43 @@ case "$print_mode" in
     ;;
 esac
 
+cpu_label_width="$(stat_label_width "$cpu_label" "$STAT_CPU_GRAPH_WIDTH" "$STAT_CPU_LABEL_WIDTH_TRIM")"
+mem_label_width="$(stat_label_width "$mem_label" "$STAT_SMALL_GRAPH_WIDTH")"
+swap_label_width="$(stat_label_width "$swap_label" "$STAT_SMALL_GRAPH_WIDTH")"
+
+cpu_label_offset="$(stat_label_offset "$cpu_label_width" "$STAT_CPU_GRAPH_WIDTH")"
+mem_label_offset="$(stat_label_offset "$mem_label_width" "$STAT_SMALL_GRAPH_WIDTH")"
+swap_label_offset="$(stat_label_offset "$swap_label_width" "$STAT_SMALL_GRAPH_WIDTH")"
+
 push_graph "cpu.total" "$cpu_value"
 "$SKETCHYBAR" --set cpu.total graph.color="$cpu_color" graph.fill_color="$cpu_fill" >/dev/null 2>&1
-"$SKETCHYBAR" --set cpu.stat_label label="$cpu_label" label.color="$cpu_color" >/dev/null 2>&1
+"$SKETCHYBAR" --set cpu.stat_label \
+  label="$cpu_label" \
+  label.color="$cpu_color" \
+  label.width="$cpu_label_width" \
+  label.align=center \
+  label.padding_left=0 \
+  label.padding_right=0 \
+  padding_right="$cpu_label_offset" >/dev/null 2>&1
 
 push_graph "mem.graph" "$mem_value"
 "$SKETCHYBAR" --set mem.graph graph.color="$mem_color" graph.fill_color="$mem_fill" >/dev/null 2>&1
-"$SKETCHYBAR" --set mem.stat_label label="$mem_label" label.color="$mem_color" >/dev/null 2>&1
+"$SKETCHYBAR" --set mem.stat_label \
+  label="$mem_label" \
+  label.color="$mem_color" \
+  label.width="$mem_label_width" \
+  label.align=center \
+  label.padding_left=0 \
+  label.padding_right=0 \
+  padding_right="$mem_label_offset" >/dev/null 2>&1
 
 push_graph "swap.graph" "$swap_value"
 "$SKETCHYBAR" --set swap.graph graph.color="$swap_color" graph.fill_color="$swap_fill" >/dev/null 2>&1
-"$SKETCHYBAR" --set swap.stat_label label="$swap_label" label.color="$swap_color" >/dev/null 2>&1
+"$SKETCHYBAR" --set swap.stat_label \
+  label="$swap_label" \
+  label.color="$swap_color" \
+  label.width="$swap_label_width" \
+  label.align=center \
+  label.padding_left=0 \
+  label.padding_right=0 \
+  padding_right="$swap_label_offset" >/dev/null 2>&1

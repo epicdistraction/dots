@@ -37,10 +37,19 @@ STAT_RADIUS=12
 STAT_ITEM_GAP=20
 STAT_LABEL_TOP_INSET=8
 STAT_LABEL_Y_OFFSET=$((STAT_TILE_HEIGHT / 2 - STAT_LABEL_TOP_INSET))
+STAT_PILL_BG=0xff182c2f
+STAT_PILL_HEIGHT=15
+STAT_PILL_Y_OFFSET=$((STAT_LABEL_Y_OFFSET + 2))
+STAT_PILL_RADIUS=6
+STAT_PILL_X_PADDING=2
 STAT_CPU_GRAPH_WIDTH=351
 STAT_SMALL_GRAPH_WIDTH=251
-STAT_CPU_LABEL_OFFSET=$((-STAT_CPU_GRAPH_WIDTH))
-STAT_SMALL_LABEL_OFFSET=$((-STAT_SMALL_GRAPH_WIDTH))
+STAT_LABEL_CHAR_WIDTH=6
+STAT_CPU_LABEL_WIDTH_TRIM=8
+STAT_CPU_LABEL_WIDTH=$((18 * STAT_LABEL_CHAR_WIDTH + 2 * STAT_PILL_X_PADDING - STAT_CPU_LABEL_WIDTH_TRIM))
+STAT_SMALL_LABEL_WIDTH=$((16 * STAT_LABEL_CHAR_WIDTH + 2 * STAT_PILL_X_PADDING))
+STAT_CPU_LABEL_OFFSET=$((-(STAT_CPU_GRAPH_WIDTH + STAT_CPU_LABEL_WIDTH) / 2))
+STAT_SMALL_LABEL_OFFSET=$((-(STAT_SMALL_GRAPH_WIDTH + STAT_SMALL_LABEL_WIDTH) / 2))
 CLOCK_TILE_HEIGHT=$STAT_TILE_HEIGHT
 CLOCK_LEFT_WIDTH=165
 CLOCK_DATE_WIDTH=82
@@ -74,7 +83,8 @@ VOLUME_MUTE_SCRIPT="osascript -e 'set volume output volume 0' -e 'set volume out
 STOPWATCH_MENU_TIME_X_MIN=$((340 + 260 + MUSIC_LEFT_INSET + MUSIC_VOLUME_WIDTH + MUSIC_VOLUME_GAP + MUSIC_PREV_WIDTH + MUSIC_BUTTON_GAP + MUSIC_PLAY_WIDTH + MUSIC_BUTTON_GAP + MUSIC_CONTROL_WIDTH + MUSIC_TRACK_WIDTH + MUSIC_RIGHT_INSET + MUSIC_GAP + 60))
 
 # Clear all items on reload.
-sketchybar --remove '/.*/' 2>/dev/null
+# Temporarily disabled while tuning stats overlays so graph histories survive reloads.
+# sketchybar --remove '/.*/' 2>/dev/null
 
 ##### Bottom gutter bar #####
 # Keep the asymmetric fake margin layout:
@@ -629,18 +639,23 @@ sketchybar --add item cpu.stat_label right \
     icon.drawing=off \
     label="CPU 0.00 0.00 0.00" \
     width=0 \
-    label.width=$STAT_CPU_GRAPH_WIDTH \
+    label.width=$STAT_CPU_LABEL_WIDTH \
     label.align=center \
     label.font="Hack Nerd Font:Bold:10.0" \
     label.color=$CYAN \
     label.y_offset=$STAT_LABEL_Y_OFFSET \
     label.padding_left=0 \
     label.padding_right=0 \
+    label.background.drawing=on \
+    label.background.color=$STAT_PILL_BG \
+    label.background.height=$STAT_PILL_HEIGHT \
+    label.background.corner_radius=$STAT_PILL_RADIUS \
+    label.background.y_offset=$STAT_PILL_Y_OFFSET \
     background.drawing=off \
-    padding_left=$STAT_CPU_LABEL_OFFSET \
-    padding_right=0
+    padding_left=0 \
+    padding_right=$STAT_CPU_LABEL_OFFSET
 
-sketchybar --move cpu.stat_label before cpu.total
+sketchybar --move cpu.stat_label after cpu.total
 
 # MEM overlay, centered across mem.graph.
 sketchybar --add item mem.stat_label right \
@@ -648,37 +663,47 @@ sketchybar --add item mem.stat_label right \
     icon.drawing=off \
     label="MEM 0/0G C0.0G" \
     width=0 \
-    label.width=$STAT_SMALL_GRAPH_WIDTH \
+    label.width=$STAT_SMALL_LABEL_WIDTH \
     label.align=center \
     label.font="Hack Nerd Font:Bold:10.0" \
     label.color=$BLUE \
     label.y_offset=$STAT_LABEL_Y_OFFSET \
     label.padding_left=0 \
     label.padding_right=0 \
+    label.background.drawing=on \
+    label.background.color=$STAT_PILL_BG \
+    label.background.height=$STAT_PILL_HEIGHT \
+    label.background.corner_radius=$STAT_PILL_RADIUS \
+    label.background.y_offset=$STAT_PILL_Y_OFFSET \
     background.drawing=off \
-    padding_left=$STAT_SMALL_LABEL_OFFSET \
-    padding_right=0
+    padding_left=0 \
+    padding_right=$STAT_SMALL_LABEL_OFFSET
 
-sketchybar --move mem.stat_label before mem.graph
+sketchybar --move mem.stat_label after mem.graph
 
 # SWP overlay, centered across swap.graph.
 sketchybar --add item swap.stat_label right \
   --set swap.stat_label \
     icon.drawing=off \
-    label="SWP 0.0G O 0/s" \
+    label="SWP 0.0G +0M/5m" \
     width=0 \
-    label.width=$STAT_SMALL_GRAPH_WIDTH \
+    label.width=$STAT_SMALL_LABEL_WIDTH \
     label.align=center \
     label.font="Hack Nerd Font:Bold:10.0" \
     label.color=$ORANGE \
     label.y_offset=$STAT_LABEL_Y_OFFSET \
     label.padding_left=0 \
     label.padding_right=0 \
+    label.background.drawing=on \
+    label.background.color=$STAT_PILL_BG \
+    label.background.height=$STAT_PILL_HEIGHT \
+    label.background.corner_radius=$STAT_PILL_RADIUS \
+    label.background.y_offset=$STAT_PILL_Y_OFFSET \
     background.drawing=off \
-    padding_left=$STAT_SMALL_LABEL_OFFSET \
-    padding_right=0
+    padding_left=0 \
+    padding_right=$STAT_SMALL_LABEL_OFFSET
 
-sketchybar --move swap.stat_label before swap.graph
+sketchybar --move swap.stat_label after swap.graph
 
 ##### Stats driver — keep after all stat items #####
 sketchybar --add item stats.driver right \
