@@ -10,7 +10,7 @@ mkdir -p "$CONFIG_DIR/cache"
 # Palette sampled toward your terminal/window theme:
 # deep teal base, pale cyan text, copper/warm wallpaper accent.
 BAR_BG=0x00000000
-MAIN_CELL=transparent
+MAIN_CELL=0x00000000
 PANEL=0x66002434
 PANEL_STRONG=0xcc00283a
 BORDER=0x44c77d47
@@ -290,8 +290,8 @@ sketchybar --add bracket music.tile music.left_pad music.prev music.prev_play_ga
     background.color=$PANEL_STRONG \
     background.height=$MUSIC_TRACK_HEIGHT \
     background.corner_radius=$MUSIC_RADIUS \
-    background.border_width=1 \
-    background.border_color=$BORDER
+    background.border_width=0 \
+    background.border_color=0x00000000
 
 sketchybar --set music \
   script="$PLUGIN_DIR/music.sh" \
@@ -434,8 +434,8 @@ sketchybar --add bracket clock.tile clock.left clock.date clock \
     background.color=$PANEL_STRONG \
     background.height=$CLOCK_TILE_HEIGHT \
     background.corner_radius=17 \
-    background.border_width=1 \
-    background.border_color=$BORDER
+    background.border_width=0 \
+    background.border_color=0x00000000
 
 # Popup timezone options.
 TZ_POPUP_COMMON=(
@@ -587,24 +587,24 @@ sketchybar --add bracket cpu.tile cpu.total \
     background.color=$PANEL_STRONG \
     background.height=$STAT_TILE_HEIGHT \
     background.corner_radius=$STAT_RADIUS \
-    background.border_width=1 \
-    background.border_color=0x22000000
+    background.border_width=0 \
+    background.border_color=0x00000000
 
 sketchybar --add bracket mem.tile mem.graph \
   --set mem.tile \
     background.color=$PANEL_STRONG \
     background.height=$STAT_TILE_HEIGHT \
     background.corner_radius=$STAT_RADIUS \
-    background.border_width=1 \
-    background.border_color=0x22000000
+    background.border_width=0 \
+    background.border_color=0x00000000
 
 sketchybar --add bracket swap.tile swap.graph \
   --set swap.tile \
     background.color=$PANEL_STRONG \
     background.height=$STAT_TILE_HEIGHT \
     background.corner_radius=$STAT_RADIUS \
-    background.border_width=1 \
-    background.border_color=0x22000000
+    background.border_width=0 \
+    background.border_color=0x00000000
 
 # Fitted external backing. The real bar is transparent; this bracket tracks the
 # first/last visible objects without adding extra end padding.
@@ -613,8 +613,8 @@ sketchybar --add bracket main.tile music.left_pad music.prev music.prev_play_gap
     background.color=$MAIN_CELL \
     background.height=$STAT_TILE_HEIGHT \
     background.corner_radius=$STAT_RADIUS \
-    background.border_width=1 \
-    background.border_color=$BORDER
+    background.border_width=0 \
+    background.border_color=0x00000000
 
 # CPU overlays, anchored before cpu.total.
 sketchybar --add item cpu.name right \
