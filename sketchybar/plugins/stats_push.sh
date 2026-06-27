@@ -5,7 +5,8 @@ export LC_ALL=C
 
 CONFIG_DIR="${CONFIG_DIR:-$HOME/.config/sketchybar}"
 CACHE_DIR="$CONFIG_DIR/cache"
-STATE_FILE="${STATS_SWAP_STATE_FILE:-$CACHE_DIR/stats_swap_used_5m.state}"
+SWAP_STATE_FILE="${STATS_SWAP_STATE_FILE:-$CACHE_DIR/stats_swap_used_5m.state}"
+GPU_STATE_FILE="${STATS_GPU_STATE_FILE:-$CACHE_DIR/stats_gpu_load_5m.state}"
 SKETCHYBAR="${SKETCHYBAR:-$(command -v sketchybar 2>/dev/null)}"
 
 [ -n "$SKETCHYBAR" ] || SKETCHYBAR="/opt/homebrew/bin/sketchybar"
@@ -13,6 +14,8 @@ mkdir -p "$CACHE_DIR" 2>/dev/null
 
 CYAN="0xff7bdff2"
 CYAN_FILL="0x337bdff2"
+GREEN="0xffa6e3a1"
+GREEN_FILL="0x33a6e3a1"
 BLUE="0xff89b4fa"
 BLUE_FILL="0x3389b4fa"
 ORANGE="0xffc77d47"
@@ -25,12 +28,24 @@ RED_FILL="0x33f38ba8"
 STAT_LABEL_CHAR_WIDTH=6
 STAT_PILL_X_PADDING=2
 STAT_CPU_LABEL_WIDTH_TRIM=8
-STAT_CPU_GRAPH_WIDTH=351
-STAT_SMALL_GRAPH_WIDTH=251
+STAT_ITEM_GAP=20
+STAT_STATS_SPAN_WIDTH=930
+STAT_GRAPH_COUNT=4
+STAT_GAP_COUNT=$((STAT_GRAPH_COUNT - 1))
+STAT_GRAPH_WIDTH=$(((STAT_STATS_SPAN_WIDTH - STAT_GAP_COUNT * STAT_ITEM_GAP) / STAT_GRAPH_COUNT))
+GPU_AVG_WINDOW_SECONDS=300
+GPU_STATE_RETENTION_SECONDS=900
 SWAP_DELTA_WINDOW_SECONDS=300
 SWAP_STATE_RETENTION_SECONDS=900
 
 print_mode="${1:-}"
+
+is_print_mode=0
+case "$print_mode" in
+  --print-cpu-label|--print-gpu-label|--print-mem-label|--print-swap-label|--print-labels)
+    is_print_mode=1
+    ;;
+esac
 
 clamp01() {
   awk -v value="$1" 'BEGIN {
@@ -83,6 +98,7 @@ stat_label_offset() {
 }
 
 vm_stat_output="$(vm_stat 2>/dev/null)"
+now="$(date +%s 2>/dev/null)"
 
 # ----- CPU -----
 cpu_label="$(
@@ -114,6 +130,92 @@ cpu_value="$(awk -v pct="$cpu_pct" -v cpus="$logical_cpus" 'BEGIN {
 }')"
 
 read cpu_color cpu_fill <<<"$(hot_colors "$cpu_value" "$CYAN" "$CYAN_FILL")"
+
+# ----- GPU -----
+gpu_value=0
+gpu_avg_value=0
+gpu_label="GPU --"
+gpu_sample_ok=0
+
+need_gpu=1
+case "$print_mode" in
+  --print-cpu-label|--print-mem-label|--print-swap-label)
+    need_gpu=0
+    ;;
+esac
+
+if [ "$need_gpu" -eq 1 ] && command -v macmon >/dev/null 2>&1; then
+  gpu_fields="$(
+    macmon pipe -s 1 -i 100 2>/dev/null | awk '
+      NR == 1 {
+        usage = $0
+
+        if (usage ~ /"gpu_usage":[[][^],]+,[^]]+[]]/) {
+          sub(/^.*"gpu_usage":[[][^],]+,/, "", usage)
+          sub(/[]].*$/, "", usage)
+        } else {
+          usage = ""
+        }
+
+        if (usage != "") printf "%.6f", usage + 0
+        exit
+      }'
+  )"
+  read gpu_value <<<"$gpu_fields"
+
+  if [ -n "$gpu_value" ]; then
+    gpu_sample_ok=1
+  else
+    gpu_value=0
+  fi
+fi
+
+write_gpu_state() {
+  {
+    if [ -r "$GPU_STATE_FILE" ]; then
+      awk -v now="$now" -v retention="$GPU_STATE_RETENTION_SECONDS" '
+        NF >= 2 &&
+        $1 ~ /^[0-9]+$/ &&
+        $2 ~ /^[0-9]+([.][0-9]+)?$/ &&
+        now >= $1 &&
+        now - $1 <= retention {
+          print $1, $2
+        }' "$GPU_STATE_FILE"
+    fi
+    printf '%s %.6f\n' "$now" "$gpu_value"
+  } >"$GPU_STATE_FILE.tmp" 2>/dev/null && mv "$GPU_STATE_FILE.tmp" "$GPU_STATE_FILE" 2>/dev/null
+}
+
+if [ "$gpu_sample_ok" -eq 1 ] && [ -n "$now" ]; then
+  gpu_avg_value="$(
+    {
+      if [ -r "$GPU_STATE_FILE" ]; then
+        awk -v now="$now" -v window="$GPU_AVG_WINDOW_SECONDS" '
+          NF >= 2 &&
+          $1 ~ /^[0-9]+$/ &&
+          $2 ~ /^[0-9]+([.][0-9]+)?$/ &&
+          now >= $1 &&
+          now - $1 <= window {
+            print $2
+          }' "$GPU_STATE_FILE"
+      fi
+      printf '%.6f\n' "$gpu_value"
+    } | awk '{ sum += $1; count++ } END {
+      if (count > 0) printf "%.6f", sum / count
+      else printf "0"
+    }'
+  )"
+
+  gpu_label="$(awk -v avg="$gpu_avg_value" 'BEGIN {
+    printf "GPU %.2f/5m", avg + 0
+  }')"
+
+  if [ "$is_print_mode" -eq 0 ]; then
+    write_gpu_state
+  fi
+fi
+
+read gpu_color gpu_fill <<<"$(hot_colors "$gpu_value" "$GREEN" "$GREEN_FILL")"
 
 # ----- Memory -----
 mem_total_bytes="$(sysctl -n hw.memsize 2>/dev/null | awk '$1 ~ /^[0-9]+$/ { print $1; exit }')"
@@ -216,18 +318,10 @@ swap_used_mib="$(awk -v used="$swap_used_g" 'BEGIN {
 }')"
 
 swap_delta_mib=0
-now="$(date +%s 2>/dev/null)"
-
-is_print_mode=0
-case "$print_mode" in
-  --print-cpu-label|--print-mem-label|--print-swap-label|--print-labels)
-    is_print_mode=1
-    ;;
-esac
 
 write_swap_state() {
   {
-    if [ -r "$STATE_FILE" ]; then
+    if [ -r "$SWAP_STATE_FILE" ]; then
       awk -v now="$now" -v retention="$SWAP_STATE_RETENTION_SECONDS" '
         NF >= 2 &&
         $1 ~ /^[0-9]+$/ &&
@@ -235,14 +329,14 @@ write_swap_state() {
         now >= $1 &&
         now - $1 <= retention {
           print $1, $2
-        }' "$STATE_FILE"
+        }' "$SWAP_STATE_FILE"
     fi
     printf '%s %s\n' "$now" "$swap_used_mib"
-  } >"$STATE_FILE.tmp" 2>/dev/null && mv "$STATE_FILE.tmp" "$STATE_FILE" 2>/dev/null
+  } >"$SWAP_STATE_FILE.tmp" 2>/dev/null && mv "$SWAP_STATE_FILE.tmp" "$SWAP_STATE_FILE" 2>/dev/null
 }
 
 if [ -n "$swap_used_mib" ] && [ -n "$now" ]; then
-  if [ -r "$STATE_FILE" ]; then
+  if [ -r "$SWAP_STATE_FILE" ]; then
     swap_delta_mib="$(
       awk -v now="$now" \
           -v current="$swap_used_mib" \
@@ -260,7 +354,7 @@ if [ -n "$swap_used_mib" ] && [ -n "$now" ]; then
         END {
           if (found) printf "%.0f", current - baseline
           else printf "0"
-        }' "$STATE_FILE"
+        }' "$SWAP_STATE_FILE"
     )"
   fi
 
@@ -284,23 +378,29 @@ case "$print_mode" in
     printf '%s\n' "$mem_label"
     exit 0
     ;;
+  --print-gpu-label)
+    printf '%s\n' "$gpu_label"
+    exit 0
+    ;;
   --print-swap-label)
     printf '%s\n' "$swap_label"
     exit 0
     ;;
   --print-labels)
-    printf '%s\n%s\n%s\n' "$swap_label" "$mem_label" "$cpu_label"
+    printf '%s\n%s\n%s\n%s\n' "$swap_label" "$mem_label" "$gpu_label" "$cpu_label"
     exit 0
     ;;
 esac
 
-cpu_label_width="$(stat_label_width "$cpu_label" "$STAT_CPU_GRAPH_WIDTH" "$STAT_CPU_LABEL_WIDTH_TRIM")"
-mem_label_width="$(stat_label_width "$mem_label" "$STAT_SMALL_GRAPH_WIDTH")"
-swap_label_width="$(stat_label_width "$swap_label" "$STAT_SMALL_GRAPH_WIDTH")"
+cpu_label_width="$(stat_label_width "$cpu_label" "$STAT_GRAPH_WIDTH" "$STAT_CPU_LABEL_WIDTH_TRIM")"
+gpu_label_width="$(stat_label_width "$gpu_label" "$STAT_GRAPH_WIDTH")"
+mem_label_width="$(stat_label_width "$mem_label" "$STAT_GRAPH_WIDTH")"
+swap_label_width="$(stat_label_width "$swap_label" "$STAT_GRAPH_WIDTH")"
 
-cpu_label_offset="$(stat_label_offset "$cpu_label_width" "$STAT_CPU_GRAPH_WIDTH")"
-mem_label_offset="$(stat_label_offset "$mem_label_width" "$STAT_SMALL_GRAPH_WIDTH")"
-swap_label_offset="$(stat_label_offset "$swap_label_width" "$STAT_SMALL_GRAPH_WIDTH")"
+cpu_label_offset="$(stat_label_offset "$cpu_label_width" "$STAT_GRAPH_WIDTH")"
+gpu_label_offset="$(stat_label_offset "$gpu_label_width" "$STAT_GRAPH_WIDTH")"
+mem_label_offset="$(stat_label_offset "$mem_label_width" "$STAT_GRAPH_WIDTH")"
+swap_label_offset="$(stat_label_offset "$swap_label_width" "$STAT_GRAPH_WIDTH")"
 
 push_graph "cpu.total" "$cpu_value"
 "$SKETCHYBAR" --set cpu.total graph.color="$cpu_color" graph.fill_color="$cpu_fill" >/dev/null 2>&1
@@ -312,6 +412,17 @@ push_graph "cpu.total" "$cpu_value"
   label.padding_left=0 \
   label.padding_right=0 \
   padding_right="$cpu_label_offset" >/dev/null 2>&1
+
+push_graph "gpu.graph" "$gpu_value"
+"$SKETCHYBAR" --set gpu.graph graph.color="$gpu_color" graph.fill_color="$gpu_fill" >/dev/null 2>&1
+"$SKETCHYBAR" --set gpu.stat_label \
+  label="$gpu_label" \
+  label.color="$gpu_color" \
+  label.width="$gpu_label_width" \
+  label.align=center \
+  label.padding_left=0 \
+  label.padding_right=0 \
+  padding_right="$gpu_label_offset" >/dev/null 2>&1
 
 push_graph "mem.graph" "$mem_value"
 "$SKETCHYBAR" --set mem.graph graph.color="$mem_color" graph.fill_color="$mem_fill" >/dev/null 2>&1

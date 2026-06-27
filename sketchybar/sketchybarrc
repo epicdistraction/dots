@@ -35,6 +35,12 @@ BAR_RADIUS=20
 STAT_TILE_HEIGHT=140
 STAT_RADIUS=12
 STAT_ITEM_GAP=20
+STAT_STATS_SPAN_WIDTH=930
+STAT_GRAPH_COUNT=4
+STAT_GAP_COUNT=$((STAT_GRAPH_COUNT - 1))
+STAT_GRAPH_WIDTH=$(((STAT_STATS_SPAN_WIDTH - STAT_GAP_COUNT * STAT_ITEM_GAP) / STAT_GRAPH_COUNT))
+STAT_STATS_REMAINDER=$((STAT_STATS_SPAN_WIDTH - STAT_GRAPH_COUNT * STAT_GRAPH_WIDTH - STAT_GAP_COUNT * STAT_ITEM_GAP))
+STAT_SWAP_MEM_GAP=$((STAT_ITEM_GAP + STAT_STATS_REMAINDER))
 STAT_LABEL_TOP_INSET=8
 STAT_LABEL_DOWN_SHIFT=110
 STAT_LABEL_Y_OFFSET=$((STAT_TILE_HEIGHT / 2 - STAT_LABEL_TOP_INSET - STAT_LABEL_DOWN_SHIFT))
@@ -43,14 +49,12 @@ STAT_PILL_HEIGHT=15
 STAT_PILL_Y_OFFSET=$((STAT_LABEL_Y_OFFSET + 2))
 STAT_PILL_RADIUS=6
 STAT_PILL_X_PADDING=2
-STAT_CPU_GRAPH_WIDTH=351
-STAT_SMALL_GRAPH_WIDTH=251
 STAT_LABEL_CHAR_WIDTH=6
 STAT_CPU_LABEL_WIDTH_TRIM=8
 STAT_CPU_LABEL_WIDTH=$((18 * STAT_LABEL_CHAR_WIDTH + 2 * STAT_PILL_X_PADDING - STAT_CPU_LABEL_WIDTH_TRIM))
 STAT_SMALL_LABEL_WIDTH=$((16 * STAT_LABEL_CHAR_WIDTH + 2 * STAT_PILL_X_PADDING))
-STAT_CPU_LABEL_OFFSET=$((-(STAT_CPU_GRAPH_WIDTH + STAT_CPU_LABEL_WIDTH) / 2))
-STAT_SMALL_LABEL_OFFSET=$((-(STAT_SMALL_GRAPH_WIDTH + STAT_SMALL_LABEL_WIDTH) / 2))
+STAT_CPU_LABEL_OFFSET=$((-(STAT_GRAPH_WIDTH + STAT_CPU_LABEL_WIDTH) / 2))
+STAT_SMALL_LABEL_OFFSET=$((-(STAT_GRAPH_WIDTH + STAT_SMALL_LABEL_WIDTH) / 2))
 CLOCK_TILE_HEIGHT=$STAT_TILE_HEIGHT
 CLOCK_LEFT_WIDTH=165
 CLOCK_DATE_WIDTH=82
@@ -90,7 +94,7 @@ VOLUME_HALF_SCRIPT="osascript \
   -e 'if newVol < 0 then set newVol to 0' \
   -e 'set volume output volume newVol'"
 VOLUME_MUTE_SCRIPT="osascript -e 'set volume output volume 0' -e 'set volume output muted true'"
-STOPWATCH_MENU_TIME_X_MIN=$((340 + 260 + MUSIC_LEFT_INSET + MUSIC_VOLUME_WIDTH + MUSIC_VOLUME_GAP + MUSIC_PREV_WIDTH + MUSIC_BUTTON_GAP + MUSIC_PLAY_WIDTH + MUSIC_BUTTON_GAP + MUSIC_CONTROL_WIDTH + MUSIC_TRACK_WIDTH + MUSIC_RIGHT_INSET + MUSIC_GAP + 60))
+STOPWATCH_MENU_TIME_X_MIN=$((340 + 220 + MUSIC_LEFT_INSET + MUSIC_VOLUME_WIDTH + MUSIC_VOLUME_GAP + MUSIC_PREV_WIDTH + MUSIC_BUTTON_GAP + MUSIC_PLAY_WIDTH + MUSIC_BUTTON_GAP + MUSIC_CONTROL_WIDTH + MUSIC_TRACK_WIDTH + MUSIC_RIGHT_INSET + MUSIC_GAP + 60))
 
 # Clear all items on reload.
 # Temporarily disabled while tuning stats overlays so graph histories survive reloads.
@@ -107,7 +111,7 @@ sketchybar --bar \
   corner_radius=$BAR_RADIUS \
   border_width=0 \
   blur_radius=0 \
-  padding_left=260 \
+  padding_left=220 \
   padding_right=322 \
   sticky=on \
   topmost=window \
@@ -546,10 +550,12 @@ sketchybar --subscribe clock.vpn clock_update
 
 ##### Right cluster: graph-only stats with anchored overlays #####
 # Add right-side graphs/gaps in this order so visible order is:
-# SWP | 20px | MEM | 20px | CPU.
+# SWP | 22px | MEM | 20px | GPU | 20px | CPU.
+# 930px span = 4 equal graph cells + 3 gaps; the 2px integer remainder
+# rides in the leftmost stat gap so the swap-left edge lands exactly.
 
-# CPU graph, rightmost / largest.
-sketchybar --add graph cpu.total right $STAT_CPU_GRAPH_WIDTH \
+# CPU graph, rightmost.
+sketchybar --add graph cpu.total right $STAT_GRAPH_WIDTH \
   --set cpu.total \
     icon.drawing=off \
     label.drawing=off \
@@ -571,8 +577,31 @@ sketchybar --add item gap.mem_cpu right \
     padding_left=0 \
     padding_right=0
 
-# MEM graph, middle.
-sketchybar --add graph mem.graph right $STAT_SMALL_GRAPH_WIDTH \
+# GPU graph, next to CPU.
+sketchybar --add graph gpu.graph right $STAT_GRAPH_WIDTH \
+  --set gpu.graph \
+    icon.drawing=off \
+    label.drawing=off \
+    background.color=0x00000000 \
+    background.height=$STAT_TILE_HEIGHT \
+    background.corner_radius=$STAT_RADIUS \
+    graph.color=$GREEN \
+    graph.fill_color=0x33a6e3a1 \
+    graph.line_width=1.5 \
+    padding_left=-1 \
+    padding_right=0
+
+sketchybar --add item gap.mem_gpu right \
+  --set gap.mem_gpu \
+    width=$STAT_ITEM_GAP \
+    icon.drawing=off \
+    label.drawing=off \
+    background.drawing=off \
+    padding_left=0 \
+    padding_right=0
+
+# MEM graph.
+sketchybar --add graph mem.graph right $STAT_GRAPH_WIDTH \
   --set mem.graph \
     icon.drawing=off \
     label.drawing=off \
@@ -587,7 +616,7 @@ sketchybar --add graph mem.graph right $STAT_SMALL_GRAPH_WIDTH \
 
 sketchybar --add item gap.swap_mem right \
   --set gap.swap_mem \
-    width=$STAT_ITEM_GAP \
+    width=$STAT_SWAP_MEM_GAP \
     icon.drawing=off \
     label.drawing=off \
     background.drawing=off \
@@ -595,7 +624,7 @@ sketchybar --add item gap.swap_mem right \
     padding_right=0
 
 # SWP graph, leftmost of stats cluster.
-sketchybar --add graph swap.graph right $STAT_SMALL_GRAPH_WIDTH \
+sketchybar --add graph swap.graph right $STAT_GRAPH_WIDTH \
   --set swap.graph \
     icon.drawing=off \
     label.drawing=off \
@@ -611,6 +640,14 @@ sketchybar --add graph swap.graph right $STAT_SMALL_GRAPH_WIDTH \
 # Tile backgrounds.
 sketchybar --add bracket cpu.tile cpu.total \
   --set cpu.tile \
+    background.color=$PANEL_STRONG \
+    background.height=$STAT_TILE_HEIGHT \
+    background.corner_radius=$STAT_RADIUS \
+    background.border_width=0 \
+    background.border_color=0x00000000
+
+sketchybar --add bracket gpu.tile gpu.graph \
+  --set gpu.tile \
     background.color=$PANEL_STRONG \
     background.height=$STAT_TILE_HEIGHT \
     background.corner_radius=$STAT_RADIUS \
@@ -635,7 +672,7 @@ sketchybar --add bracket swap.tile swap.graph \
 
 # Fitted external backing. The real bar is transparent; this bracket tracks the
 # first/last visible objects without adding extra end padding.
-sketchybar --add bracket main.tile music.left_pad music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.volume_gap music.volume music.right_pad gap.clock_music clock.left clock.date clock swap.graph gap.swap_mem mem.graph gap.mem_cpu cpu.total \
+sketchybar --add bracket main.tile music.left_pad music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.volume_gap music.volume music.right_pad gap.clock_music clock.left clock.date clock swap.graph gap.swap_mem mem.graph gap.mem_gpu gpu.graph gap.mem_cpu cpu.total \
   --set main.tile \
     background.color=$MAIN_CELL \
     background.height=$STAT_TILE_HEIGHT \
@@ -666,6 +703,30 @@ sketchybar --add item cpu.stat_label right \
     padding_right=$STAT_CPU_LABEL_OFFSET
 
 sketchybar --move cpu.stat_label after cpu.total
+
+# GPU overlay, centered across gpu.graph.
+sketchybar --add item gpu.stat_label right \
+  --set gpu.stat_label \
+    icon.drawing=off \
+    label="GPU 0.00/5m" \
+    width=0 \
+    label.width=$STAT_SMALL_LABEL_WIDTH \
+    label.align=center \
+    label.font="Hack Nerd Font:Bold:10.0" \
+    label.color=$GREEN \
+    label.y_offset=$STAT_LABEL_Y_OFFSET \
+    label.padding_left=0 \
+    label.padding_right=0 \
+    label.background.drawing=on \
+    label.background.color=$STAT_PILL_BG \
+    label.background.height=$STAT_PILL_HEIGHT \
+    label.background.corner_radius=$STAT_PILL_RADIUS \
+    label.background.y_offset=$STAT_PILL_Y_OFFSET \
+    background.drawing=off \
+    padding_left=0 \
+    padding_right=$STAT_SMALL_LABEL_OFFSET
+
+sketchybar --move gpu.stat_label after gpu.graph
 
 # MEM overlay, centered across mem.graph.
 sketchybar --add item mem.stat_label right \
