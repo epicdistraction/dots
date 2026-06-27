@@ -78,8 +78,17 @@ MUSIC_LABEL_WIDTH=285
 MUSIC_TRACK_HEIGHT=$STAT_TILE_HEIGHT
 MUSIC_RADIUS=$STAT_RADIUS
 MUSIC_PAGE_CHARS=60
-VOLUME_FULL_SCRIPT="osascript -e 'set volume output muted false' -e 'set volume output volume 75'"
-VOLUME_HALF_SCRIPT="osascript -e 'set volume output muted false' -e 'set volume output volume 40'"
+VOLUME_FULL_SCRIPT="osascript \
+  -e 'set curVol to output volume of (get volume settings)' \
+  -e 'set newVol to curVol + 8' \
+  -e 'if newVol > 100 then set newVol to 100' \
+  -e 'set volume output muted false' \
+  -e 'set volume output volume newVol'"
+VOLUME_HALF_SCRIPT="osascript \
+  -e 'set curVol to output volume of (get volume settings)' \
+  -e 'set newVol to curVol - 8' \
+  -e 'if newVol < 0 then set newVol to 0' \
+  -e 'set volume output volume newVol'"
 VOLUME_MUTE_SCRIPT="osascript -e 'set volume output volume 0' -e 'set volume output muted true'"
 STOPWATCH_MENU_TIME_X_MIN=$((340 + 260 + MUSIC_LEFT_INSET + MUSIC_VOLUME_WIDTH + MUSIC_VOLUME_GAP + MUSIC_PREV_WIDTH + MUSIC_BUTTON_GAP + MUSIC_PLAY_WIDTH + MUSIC_BUTTON_GAP + MUSIC_CONTROL_WIDTH + MUSIC_TRACK_WIDTH + MUSIC_RIGHT_INSET + MUSIC_GAP + 60))
 
