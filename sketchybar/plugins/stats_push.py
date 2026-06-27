@@ -22,10 +22,6 @@ YELLOW_FILL = "0x33f9e2af"
 RED = "0xfff38ba8"
 RED_FILL = "0x33f38ba8"
 
-MUTED = "0xff82a9ad"
-TEXT = "0xffd6f3f0"
-
-
 def run(args):
     subprocess.run(
         [SKETCHYBAR] + args,
@@ -88,10 +84,10 @@ set_item(
 )
 
 set_item(
-    "cpu.value",
+    "cpu.stat_label",
     {
-        "label": f"{total_cpu_pct:4.0f}%",
-        "label.color": TEXT if cpu_value >= 0.65 else MUTED,
+        "label": f"CPU {total_cpu_pct:.0f}%",
+        "label.color": cpu_color,
     },
 )
 
@@ -113,10 +109,10 @@ set_item(
 )
 
 set_item(
-    "mem.value",
+    "mem.stat_label",
     {
-        "label": f"{mem.percent:3.0f}%",
-        "label.color": TEXT if mem_value >= 0.65 else MUTED,
+        "label": f"MEM {mem.percent:.0f}%",
+        "label.color": mem_color,
     },
 )
 
@@ -143,9 +139,9 @@ set_item(
 )
 
 set_item(
-    "swap.value",
+    "swap.stat_label",
     {
-        "label": f"{swap_percent:3.0f}%",
-        "label.color": TEXT if swap_value >= 0.65 else MUTED,
+        "label": f"SWP {swap_percent:.0f}%",
+        "label.color": swap_color,
     },
 )

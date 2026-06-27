@@ -35,8 +35,12 @@ BAR_RADIUS=20
 STAT_TILE_HEIGHT=140
 STAT_RADIUS=12
 STAT_ITEM_GAP=20
-STAT_LABEL_TOP_INSET=18
+STAT_LABEL_TOP_INSET=115
 STAT_LABEL_Y_OFFSET=$((STAT_TILE_HEIGHT / 2 - STAT_LABEL_TOP_INSET))
+STAT_CPU_GRAPH_WIDTH=351
+STAT_SMALL_GRAPH_WIDTH=251
+STAT_CPU_LABEL_OFFSET=$((-STAT_CPU_GRAPH_WIDTH))
+STAT_SMALL_LABEL_OFFSET=$((-STAT_SMALL_GRAPH_WIDTH))
 CLOCK_TILE_HEIGHT=$STAT_TILE_HEIGHT
 CLOCK_LEFT_WIDTH=165
 CLOCK_DATE_WIDTH=82
@@ -522,7 +526,7 @@ sketchybar --subscribe clock.vpn clock_update
 # SWP | 20px | MEM | 20px | CPU.
 
 # CPU graph, rightmost / largest.
-sketchybar --add graph cpu.total right 351 \
+sketchybar --add graph cpu.total right $STAT_CPU_GRAPH_WIDTH \
   --set cpu.total \
     icon.drawing=off \
     label.drawing=off \
@@ -545,7 +549,7 @@ sketchybar --add item gap.mem_cpu right \
     padding_right=0
 
 # MEM graph, middle.
-sketchybar --add graph mem.graph right 251 \
+sketchybar --add graph mem.graph right $STAT_SMALL_GRAPH_WIDTH \
   --set mem.graph \
     icon.drawing=off \
     label.drawing=off \
@@ -568,7 +572,7 @@ sketchybar --add item gap.swap_mem right \
     padding_right=0
 
 # SWP graph, leftmost of stats cluster.
-sketchybar --add graph swap.graph right 251 \
+sketchybar --add graph swap.graph right $STAT_SMALL_GRAPH_WIDTH \
   --set swap.graph \
     icon.drawing=off \
     label.drawing=off \
@@ -616,101 +620,62 @@ sketchybar --add bracket main.tile music.left_pad music.prev music.prev_play_gap
     background.border_width=0 \
     background.border_color=0x00000000
 
-# CPU overlays, anchored before cpu.total.
-sketchybar --add item cpu.name right \
-  --set cpu.name \
+# CPU overlay, centered across cpu.total.
+sketchybar --add item cpu.stat_label right \
+  --set cpu.stat_label \
     icon.drawing=off \
-    label="CPU" \
+    label="CPU 0%" \
     width=0 \
-    label.width=52 \
-    label.align=left \
+    label.width=$STAT_CPU_GRAPH_WIDTH \
+    label.align=center \
     label.font="Hack Nerd Font:Bold:10.0" \
     label.color=$CYAN \
     label.y_offset=$STAT_LABEL_Y_OFFSET \
+    label.padding_left=0 \
+    label.padding_right=0 \
     background.drawing=off \
-    padding_left=-338 \
+    padding_left=$STAT_CPU_LABEL_OFFSET \
     padding_right=0
 
-sketchybar --add item cpu.value right \
-  --set cpu.value \
-    icon.drawing=off \
-    label="   0%" \
-    width=0 \
-    label.width=66 \
-    label.align=right \
-    label.font="Hack Nerd Font:Bold:10.0" \
-    label.color=$TEXT \
-    label.y_offset=$STAT_LABEL_Y_OFFSET \
-    background.drawing=off \
-    padding_left=-72 \
-    padding_right=0
+sketchybar --move cpu.stat_label before cpu.total
 
-sketchybar --move cpu.name before cpu.total
-sketchybar --move cpu.value before cpu.total
-
-# MEM overlays, anchored before mem.graph.
-sketchybar --add item mem.name right \
-  --set mem.name \
+# MEM overlay, centered across mem.graph.
+sketchybar --add item mem.stat_label right \
+  --set mem.stat_label \
     icon.drawing=off \
-    label="MEM" \
+    label="MEM 0%" \
     width=0 \
-    label.width=52 \
-    label.align=left \
+    label.width=$STAT_SMALL_GRAPH_WIDTH \
+    label.align=center \
     label.font="Hack Nerd Font:Bold:10.0" \
     label.color=$BLUE \
     label.y_offset=$STAT_LABEL_Y_OFFSET \
+    label.padding_left=0 \
+    label.padding_right=0 \
     background.drawing=off \
-    padding_left=-238 \
+    padding_left=$STAT_SMALL_LABEL_OFFSET \
     padding_right=0
 
-sketchybar --add item mem.value right \
-  --set mem.value \
-    icon.drawing=off \
-    label="  0%" \
-    width=0 \
-    label.width=58 \
-    label.align=right \
-    label.font="Hack Nerd Font:Bold:10.0" \
-    label.color=$TEXT \
-    label.y_offset=$STAT_LABEL_Y_OFFSET \
-    background.drawing=off \
-    padding_left=-64 \
-    padding_right=0
+sketchybar --move mem.stat_label before mem.graph
 
-sketchybar --move mem.name before mem.graph
-sketchybar --move mem.value before mem.graph
-
-# SWP overlays, anchored before swap.graph.
-sketchybar --add item swap.name right \
-  --set swap.name \
+# SWP overlay, centered across swap.graph.
+sketchybar --add item swap.stat_label right \
+  --set swap.stat_label \
     icon.drawing=off \
-    label="SWP" \
+    label="SWP 0%" \
     width=0 \
-    label.width=52 \
-    label.align=left \
+    label.width=$STAT_SMALL_GRAPH_WIDTH \
+    label.align=center \
     label.font="Hack Nerd Font:Bold:10.0" \
     label.color=$ORANGE \
     label.y_offset=$STAT_LABEL_Y_OFFSET \
+    label.padding_left=0 \
+    label.padding_right=0 \
     background.drawing=off \
-    padding_left=-238 \
+    padding_left=$STAT_SMALL_LABEL_OFFSET \
     padding_right=0
 
-sketchybar --add item swap.value right \
-  --set swap.value \
-    icon.drawing=off \
-    label="  0%" \
-    width=0 \
-    label.width=58 \
-    label.align=right \
-    label.font="Hack Nerd Font:Bold:10.0" \
-    label.color=$TEXT \
-    label.y_offset=$STAT_LABEL_Y_OFFSET \
-    background.drawing=off \
-    padding_left=-64 \
-    padding_right=0
-
-sketchybar --move swap.name before swap.graph
-sketchybar --move swap.value before swap.graph
+sketchybar --move swap.stat_label before swap.graph
 
 ##### Stats driver — keep after all stat items #####
 sketchybar --add item stats.driver right \
