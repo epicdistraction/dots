@@ -6,18 +6,71 @@ TEXT=0xffd6f3f0
 MUTED=0xff82a9ad
 CYAN=0xff7bdff2
 PANEL_STRONG=0xcc00283a
+MUSIC_BUTTON_BG=0x33000000
+TRANSPARENT=0x00ffffff
 
 CONFIG_DIR="${CONFIG_DIR:-$HOME/.config/sketchybar}"
 CACHE_DIR="$CONFIG_DIR/cache"
 PAGE_STATE="$CACHE_DIR/music_title_page_state"
 ARTIST_PAGE_STATE="$CACHE_DIR/music_artist_page_state"
+ARTWORK_SIZE=64
 PAGE_CHARS=60
 PAGE_OVERLAP=8
 
 NP="$(command -v nowplaying-cli || true)"
+JQ="$(command -v jq || true)"
 
 reset_page_state() {
   rm -f "$PAGE_STATE" "$ARTIST_PAGE_STATE"
+}
+
+is_absent() {
+  case "$1" in
+    ""|"null"|"(null)"|"<null>") return 0 ;;
+  esac
+
+  return 1
+}
+
+set_play_icon() {
+  local icon="$1"
+  local color="$2"
+
+  sketchybar --set music.play \
+    icon="$icon" \
+    icon.color="$color" \
+    background.color=$MUSIC_BUTTON_BG \
+    background.image.drawing=off
+}
+
+artwork_path_for_data() {
+  local data="$1"
+  local sig path raw_tmp jpg_tmp
+
+  mkdir -p "$CACHE_DIR"
+
+  sig="$(printf '%s' "$data" | cksum | awk '{print $1 "_" $2}')"
+  path="$CACHE_DIR/music_artwork_${sig}.jpg"
+
+  if [ ! -s "$path" ]; then
+    raw_tmp="$CACHE_DIR/music_artwork_${sig}.raw"
+    jpg_tmp="$CACHE_DIR/music_artwork_${sig}.tmp.jpg"
+
+    if ! printf '%s' "$data" | base64 -D > "$raw_tmp" 2>/dev/null; then
+      rm -f "$raw_tmp" "$jpg_tmp"
+      return 1
+    fi
+
+    if ! sips -s format jpeg -z "$ARTWORK_SIZE" "$ARTWORK_SIZE" "$raw_tmp" --out "$jpg_tmp" >/dev/null 2>&1; then
+      rm -f "$raw_tmp" "$jpg_tmp"
+      return 1
+    fi
+
+    rm -f "$raw_tmp"
+    mv "$jpg_tmp" "$path"
+  fi
+
+  printf '%s' "$path"
 }
 
 page_label() {
@@ -61,9 +114,8 @@ page_label() {
 
 if [ -z "$NP" ]; then
   reset_page_state
-  sketchybar --set music.play \
-    icon="♪" \
-    icon.color=$MUTED \
+  set_play_icon "♪" "$MUTED"
+  sketchybar \
     --set music.artist \
     label="Now Playing" \
     label.color=$TEXT \
@@ -75,15 +127,28 @@ if [ -z "$NP" ]; then
   exit 0
 fi
 
-TITLE="$("$NP" get title 2>/dev/null | head -n1)"
-ARTIST="$("$NP" get artist 2>/dev/null | head -n1)"
-RATE="$("$NP" get playbackRate 2>/dev/null | head -n1)"
+if [ -z "$JQ" ]; then
+  TITLE="$("$NP" get title 2>/dev/null | head -n1)"
+  ARTIST="$("$NP" get artist 2>/dev/null | head -n1)"
+  RATE="$("$NP" get playbackRate 2>/dev/null | head -n1)"
+  ARTWORK_DATA=""
+else
+  NOWPLAYING_JSON="$("$NP" get --json title artist playbackRate artworkData 2>/dev/null)"
 
-if [ -z "$TITLE" ] || [ "$TITLE" = "(null)" ]; then
+  if ! printf '%s' "$NOWPLAYING_JSON" | "$JQ" -e . >/dev/null 2>&1; then
+    NOWPLAYING_JSON="{}"
+  fi
+
+  TITLE="$(printf '%s' "$NOWPLAYING_JSON" | "$JQ" -r '.title // ""')"
+  ARTIST="$(printf '%s' "$NOWPLAYING_JSON" | "$JQ" -r '.artist // ""')"
+  RATE="$(printf '%s' "$NOWPLAYING_JSON" | "$JQ" -r '.playbackRate // ""')"
+  ARTWORK_DATA="$(printf '%s' "$NOWPLAYING_JSON" | "$JQ" -r '.artworkData // ""')"
+fi
+
+if is_absent "$TITLE"; then
   reset_page_state
-  sketchybar --set music.play \
-    icon="♪" \
-    icon.color=$MUTED \
+  set_play_icon "♪" "$MUTED"
+  sketchybar \
     --set music.artist \
     label="Now Playing" \
     label.color=$TEXT \
@@ -101,7 +166,7 @@ if [ "$RATE" = "0" ] || [ "$RATE" = "0.0" ]; then
   ICON="▶"
 fi
 
-if [ -n "$ARTIST" ] && [ "$ARTIST" != "(null)" ]; then
+if ! is_absent "$ARTIST"; then
   DISPLAY_ARTIST="$(page_label "$ARTIST_PAGE_STATE" "$ARTIST")"
 else
   DISPLAY_ARTIST="Unknown Artist"
@@ -109,10 +174,18 @@ fi
 
 DISPLAY_TITLE="$(page_label "$PAGE_STATE" "$TITLE")"
 
-sketchybar --set music.play \
-  icon="$ICON" \
-  icon.color=$CYAN \
-  --set music.artist \
+if ! is_absent "$ARTWORK_DATA" && ARTWORK_PATH="$(artwork_path_for_data "$ARTWORK_DATA")"; then
+  sketchybar --set music.play \
+    icon="$ICON" \
+    icon.color=$TRANSPARENT \
+    background.color=0x00000000 \
+    background.image="$ARTWORK_PATH" \
+    background.image.drawing=on
+else
+  set_play_icon "$ICON" "$CYAN"
+fi
+
+sketchybar --set music.artist \
   label="$DISPLAY_ARTIST" \
   label.color=$TEXT \
   --set music \

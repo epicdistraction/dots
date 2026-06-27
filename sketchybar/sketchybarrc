@@ -159,6 +159,9 @@ sketchybar --add item music.play left \
     background.color=$MUSIC_BUTTON_BG \
     background.height=$MUSIC_BUTTON_HEIGHT \
     background.corner_radius=$MUSIC_BUTTON_RADIUS \
+    background.image.drawing=off \
+    background.image.scale=1.0 \
+    background.image.corner_radius=$MUSIC_BUTTON_RADIUS \
     padding_left=0 \
     padding_right=0 \
     click_script="nowplaying-cli togglePlayPause"
