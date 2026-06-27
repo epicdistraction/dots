@@ -35,7 +35,7 @@ BAR_RADIUS=20
 STAT_TILE_HEIGHT=140
 STAT_RADIUS=12
 STAT_ITEM_GAP=20
-STAT_LABEL_TOP_INSET=115
+STAT_LABEL_TOP_INSET=8
 STAT_LABEL_Y_OFFSET=$((STAT_TILE_HEIGHT / 2 - STAT_LABEL_TOP_INSET))
 STAT_CPU_GRAPH_WIDTH=351
 STAT_SMALL_GRAPH_WIDTH=251
@@ -627,7 +627,7 @@ sketchybar --add bracket main.tile music.left_pad music.prev music.prev_play_gap
 sketchybar --add item cpu.stat_label right \
   --set cpu.stat_label \
     icon.drawing=off \
-    label="CPU 0%" \
+    label="CPU 0.00 0.00 0.00" \
     width=0 \
     label.width=$STAT_CPU_GRAPH_WIDTH \
     label.align=center \
@@ -646,7 +646,7 @@ sketchybar --move cpu.stat_label before cpu.total
 sketchybar --add item mem.stat_label right \
   --set mem.stat_label \
     icon.drawing=off \
-    label="MEM 0%" \
+    label="MEM 0/0G C0.0G" \
     width=0 \
     label.width=$STAT_SMALL_GRAPH_WIDTH \
     label.align=center \
@@ -665,7 +665,7 @@ sketchybar --move mem.stat_label before mem.graph
 sketchybar --add item swap.stat_label right \
   --set swap.stat_label \
     icon.drawing=off \
-    label="SWP 0%" \
+    label="SWP 0.0G O 0/s" \
     width=0 \
     label.width=$STAT_SMALL_GRAPH_WIDTH \
     label.align=center \
