@@ -45,11 +45,11 @@ STAT_LABEL_TOP_INSET=8
 STAT_LABEL_DOWN_SHIFT=110
 STAT_LABEL_Y_OFFSET=$((STAT_TILE_HEIGHT / 2 - STAT_LABEL_TOP_INSET - STAT_LABEL_DOWN_SHIFT))
 STAT_PILL_BG=0xff182c2f
-STAT_PILL_HEIGHT=15
+STAT_PILL_HEIGHT=22
 STAT_PILL_Y_OFFSET=$((STAT_LABEL_Y_OFFSET + 2))
 STAT_PILL_RADIUS=6
 STAT_PILL_X_PADDING=2
-STAT_LABEL_CHAR_WIDTH=6
+STAT_LABEL_CHAR_WIDTH=9
 STAT_CPU_LABEL_WIDTH_TRIM=8
 STAT_CPU_LABEL_WIDTH=$((18 * STAT_LABEL_CHAR_WIDTH + 2 * STAT_PILL_X_PADDING - STAT_CPU_LABEL_WIDTH_TRIM))
 STAT_SMALL_LABEL_WIDTH=$((16 * STAT_LABEL_CHAR_WIDTH + 2 * STAT_PILL_X_PADDING))
@@ -688,7 +688,7 @@ sketchybar --add item cpu.stat_label right \
     width=0 \
     label.width=$STAT_CPU_LABEL_WIDTH \
     label.align=center \
-    label.font="Hack Nerd Font:Bold:10.0" \
+    label.font="Hack Nerd Font:Bold:15.0" \
     label.color=$CYAN \
     label.y_offset=$STAT_LABEL_Y_OFFSET \
     label.padding_left=0 \
@@ -708,11 +708,11 @@ sketchybar --move cpu.stat_label after cpu.total
 sketchybar --add item gpu.stat_label right \
   --set gpu.stat_label \
     icon.drawing=off \
-    label="GPU 0.00/5m" \
+    label="GPU 0.00 0.00 0.00" \
     width=0 \
-    label.width=$STAT_SMALL_LABEL_WIDTH \
+    label.width=$STAT_CPU_LABEL_WIDTH \
     label.align=center \
-    label.font="Hack Nerd Font:Bold:10.0" \
+    label.font="Hack Nerd Font:Bold:15.0" \
     label.color=$GREEN \
     label.y_offset=$STAT_LABEL_Y_OFFSET \
     label.padding_left=0 \
@@ -724,7 +724,7 @@ sketchybar --add item gpu.stat_label right \
     label.background.y_offset=$STAT_PILL_Y_OFFSET \
     background.drawing=off \
     padding_left=0 \
-    padding_right=$STAT_SMALL_LABEL_OFFSET
+    padding_right=$STAT_CPU_LABEL_OFFSET
 
 sketchybar --move gpu.stat_label after gpu.graph
 
@@ -736,7 +736,7 @@ sketchybar --add item mem.stat_label right \
     width=0 \
     label.width=$STAT_SMALL_LABEL_WIDTH \
     label.align=center \
-    label.font="Hack Nerd Font:Bold:10.0" \
+    label.font="Hack Nerd Font:Bold:15.0" \
     label.color=$BLUE \
     label.y_offset=$STAT_LABEL_Y_OFFSET \
     label.padding_left=0 \
@@ -760,7 +760,7 @@ sketchybar --add item swap.stat_label right \
     width=0 \
     label.width=$STAT_SMALL_LABEL_WIDTH \
     label.align=center \
-    label.font="Hack Nerd Font:Bold:10.0" \
+    label.font="Hack Nerd Font:Bold:15.0" \
     label.color=$ORANGE \
     label.y_offset=$STAT_LABEL_Y_OFFSET \
     label.padding_left=0 \

@@ -25,7 +25,7 @@ YELLOW_FILL="0x33f9e2af"
 RED="0xfff38ba8"
 RED_FILL="0x33f38ba8"
 
-STAT_LABEL_CHAR_WIDTH=6
+STAT_LABEL_CHAR_WIDTH=9
 STAT_PILL_X_PADDING=2
 STAT_CPU_LABEL_WIDTH_TRIM=8
 STAT_ITEM_GAP=20
@@ -33,8 +33,10 @@ STAT_STATS_SPAN_WIDTH=930
 STAT_GRAPH_COUNT=4
 STAT_GAP_COUNT=$((STAT_GRAPH_COUNT - 1))
 STAT_GRAPH_WIDTH=$(((STAT_STATS_SPAN_WIDTH - STAT_GAP_COUNT * STAT_ITEM_GAP) / STAT_GRAPH_COUNT))
-GPU_AVG_WINDOW_SECONDS=300
-GPU_STATE_RETENTION_SECONDS=900
+GPU_AVG_1M_WINDOW_SECONDS=60
+GPU_AVG_5M_WINDOW_SECONDS=300
+GPU_AVG_15M_WINDOW_SECONDS=900
+GPU_STATE_RETENTION_SECONDS=$GPU_AVG_15M_WINDOW_SECONDS
 SWAP_DELTA_WINDOW_SECONDS=300
 SWAP_STATE_RETENTION_SECONDS=900
 
@@ -133,7 +135,9 @@ read cpu_color cpu_fill <<<"$(hot_colors "$cpu_value" "$CYAN" "$CYAN_FILL")"
 
 # ----- GPU -----
 gpu_value=0
-gpu_avg_value=0
+gpu_avg_1m_value=0
+gpu_avg_5m_value=0
+gpu_avg_15m_value=0
 gpu_label="GPU --"
 gpu_sample_ok=0
 
@@ -187,27 +191,51 @@ write_gpu_state() {
 }
 
 if [ "$gpu_sample_ok" -eq 1 ] && [ -n "$now" ]; then
-  gpu_avg_value="$(
+  read gpu_avg_1m_value gpu_avg_5m_value gpu_avg_15m_value <<<"$(
     {
       if [ -r "$GPU_STATE_FILE" ]; then
-        awk -v now="$now" -v window="$GPU_AVG_WINDOW_SECONDS" '
+        awk -v now="$now" -v retention="$GPU_STATE_RETENTION_SECONDS" '
           NF >= 2 &&
           $1 ~ /^[0-9]+$/ &&
           $2 ~ /^[0-9]+([.][0-9]+)?$/ &&
           now >= $1 &&
-          now - $1 <= window {
-            print $2
+          now - $1 <= retention {
+            print $1, $2
           }' "$GPU_STATE_FILE"
       fi
-      printf '%.6f\n' "$gpu_value"
-    } | awk '{ sum += $1; count++ } END {
-      if (count > 0) printf "%.6f", sum / count
-      else printf "0"
-    }'
+      printf '%s %.6f\n' "$now" "$gpu_value"
+    } | awk -v now="$now" \
+        -v window_1m="$GPU_AVG_1M_WINDOW_SECONDS" \
+        -v window_5m="$GPU_AVG_5M_WINDOW_SECONDS" \
+        -v window_15m="$GPU_AVG_15M_WINDOW_SECONDS" '
+      {
+        age = now - $1
+        value = $2 + 0
+        if (age <= window_1m) {
+          sum_1m += value
+          count_1m++
+        }
+        if (age <= window_5m) {
+          sum_5m += value
+          count_5m++
+        }
+        if (age <= window_15m) {
+          sum_15m += value
+          count_15m++
+        }
+      }
+      END {
+        avg_1m = count_1m > 0 ? sum_1m / count_1m : 0
+        avg_5m = count_5m > 0 ? sum_5m / count_5m : 0
+        avg_15m = count_15m > 0 ? sum_15m / count_15m : 0
+        printf "%.6f %.6f %.6f", avg_1m, avg_5m, avg_15m
+      }'
   )"
 
-  gpu_label="$(awk -v avg="$gpu_avg_value" 'BEGIN {
-    printf "GPU %.2f/5m", avg + 0
+  gpu_label="$(awk -v avg_1m="$gpu_avg_1m_value" \
+                   -v avg_5m="$gpu_avg_5m_value" \
+                   -v avg_15m="$gpu_avg_15m_value" 'BEGIN {
+    printf "GPU %.2f %.2f %.2f", avg_1m + 0, avg_5m + 0, avg_15m + 0
   }')"
 
   if [ "$is_print_mode" -eq 0 ]; then
@@ -393,7 +421,7 @@ case "$print_mode" in
 esac
 
 cpu_label_width="$(stat_label_width "$cpu_label" "$STAT_GRAPH_WIDTH" "$STAT_CPU_LABEL_WIDTH_TRIM")"
-gpu_label_width="$(stat_label_width "$gpu_label" "$STAT_GRAPH_WIDTH")"
+gpu_label_width="$(stat_label_width "$gpu_label" "$STAT_GRAPH_WIDTH" "$STAT_CPU_LABEL_WIDTH_TRIM")"
 mem_label_width="$(stat_label_width "$mem_label" "$STAT_GRAPH_WIDTH")"
 swap_label_width="$(stat_label_width "$swap_label" "$STAT_GRAPH_WIDTH")"
 
