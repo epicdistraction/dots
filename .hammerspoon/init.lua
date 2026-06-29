@@ -65,3 +65,28 @@ local previousAppKey = hs.eventtap.new(
 )
 
 previousAppKey:start()
+
+require("hs.ipc")
+
+local function postSystemKey(key, count)
+  count = count or 1
+
+  for _ = 1, count do
+    hs.eventtap.event.newSystemKeyEvent(key, true):post()
+    hs.timer.usleep(15000)
+    hs.eventtap.event.newSystemKeyEvent(key, false):post()
+    hs.timer.usleep(15000)
+  end
+end
+
+function nativeVolumeUp()
+  postSystemKey("SOUND_UP")
+end
+
+function nativeVolumeDown()
+  postSystemKey("SOUND_DOWN")
+end
+
+function nativeMute()
+  postSystemKey("MUTE")
+end

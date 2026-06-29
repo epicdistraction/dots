@@ -97,23 +97,26 @@ display_color() {
   fi
 }
 
-mouse_x() {
+mouse_geometry() {
   CLANG_MODULE_CACHE_PATH="${TMPDIR:-/private/tmp}/sketchybar-clang-cache" \
-    swift -e 'import AppKit; let p=NSEvent.mouseLocation; let s=NSScreen.screens.first { $0.frame.contains(p) }; print(Int(p.x - (s?.frame.minX ?? 0)))' 2>/dev/null
+    swift -e 'import AppKit; let p=NSEvent.mouseLocation; let s=NSScreen.screens.first { $0.frame.contains(p) }; let minX = s?.frame.minX ?? 0; let width = s?.frame.width ?? 0; print("\(Int(p.x - minX))|\(Int(width))")' 2>/dev/null
 }
 
 clicked_menu_time() {
-  local x split_x
+  local geometry x screen_width split_x right_offset
 
-  split_x="${STOPWATCH_MENU_TIME_X_MIN:-}"
-  case "$split_x" in
-    ''|0|*[!0-9]*) return 1 ;;
-  esac
+  geometry="$(mouse_geometry)"
+  IFS='|' read -r x screen_width <<< "$geometry"
 
-  x="$(mouse_x)"
-  case "$x" in
-    ''|0|*[!0-9]*) return 1 ;;
-  esac
+  right_offset="${STOPWATCH_MENU_TIME_RIGHT_OFFSET:-}"
+  if is_uint "$right_offset" && is_uint "$screen_width" && [ "$screen_width" -gt "$right_offset" ]; then
+    split_x=$((screen_width - right_offset))
+  else
+    split_x="${STOPWATCH_MENU_TIME_X_MIN:-}"
+  fi
+
+  is_uint "$split_x" && [ "$split_x" -gt 0 ] || return 1
+  is_uint "$x" && [ "$x" -gt 0 ] || return 1
 
   # The popup row is one SketchyBar item. Clicks on "WATCH" promote only;
   # clicks on the time span control the stopwatch without changing promotion.

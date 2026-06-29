@@ -32,6 +32,9 @@ TZ_RED=0xffff9db4
 
 BAR_HEIGHT=140
 BAR_RADIUS=20
+BAR_MARGIN=340
+BAR_PADDING_LEFT=220
+BAR_PADDING_RIGHT=322
 STAT_TILE_HEIGHT=140
 STAT_RADIUS=12
 STAT_ITEM_GAP=20
@@ -60,7 +63,10 @@ CLOCK_LEFT_WIDTH=165
 CLOCK_DATE_WIDTH=82
 CLOCK_TIME_WIDTH=180
 CLOCK_VPN_WIDTH=$((CLOCK_LEFT_WIDTH + CLOCK_DATE_WIDTH + CLOCK_TIME_WIDTH))
-MUSIC_GAP=20
+CLOCK_STAT_GAP=$STAT_ITEM_GAP
+CLOCK_TILE_LABEL_OFFSET=-165
+CLOCK_LEFT_TZ_LABEL_OFFSET=$((-CLOCK_LEFT_WIDTH))
+MUSIC_GAP=$((STAT_ITEM_GAP + 15))
 MUSIC_CONTROL_WIDTH=46
 MUSIC_LEFT_INSET=18
 MUSIC_RIGHT_INSET=$MUSIC_LEFT_INSET
@@ -77,24 +83,19 @@ MUSIC_CONTROL_HEIGHT=$STAT_TILE_HEIGHT
 MUSIC_BUTTON_HEIGHT=72
 MUSIC_BUTTON_RADIUS=12
 MUSIC_BUTTON_BG=0x33000000
-MUSIC_TRACK_WIDTH=330
-MUSIC_LABEL_WIDTH=285
+MUSIC_TRACK_WIDTH=360
+MUSIC_LABEL_WIDTH=$MUSIC_TRACK_WIDTH
+MUSIC_TITLE_LABEL_PADDING=10
+MUSIC_ARTIST_LABEL_PADDING=10
+MUSIC_ARTIST_LABEL_OFFSET=$((-(MUSIC_TRACK_WIDTH + 0)))
 MUSIC_TRACK_HEIGHT=$STAT_TILE_HEIGHT
 MUSIC_RADIUS=$STAT_RADIUS
 MUSIC_PAGE_CHARS=60
-VOLUME_FULL_SCRIPT="osascript \
-  -e 'set curVol to output volume of (get volume settings)' \
-  -e 'set newVol to curVol + 8' \
-  -e 'if newVol > 100 then set newVol to 100' \
-  -e 'set volume output muted false' \
-  -e 'set volume output volume newVol'"
-VOLUME_HALF_SCRIPT="osascript \
-  -e 'set curVol to output volume of (get volume settings)' \
-  -e 'set newVol to curVol - 8' \
-  -e 'if newVol < 0 then set newVol to 0' \
-  -e 'set volume output volume newVol'"
-VOLUME_MUTE_SCRIPT="osascript -e 'set volume output volume 0' -e 'set volume output muted true'"
-STOPWATCH_MENU_TIME_X_MIN=$((340 + 220 + MUSIC_LEFT_INSET + MUSIC_VOLUME_WIDTH + MUSIC_VOLUME_GAP + MUSIC_PREV_WIDTH + MUSIC_BUTTON_GAP + MUSIC_PLAY_WIDTH + MUSIC_BUTTON_GAP + MUSIC_CONTROL_WIDTH + MUSIC_TRACK_WIDTH + MUSIC_RIGHT_INSET + MUSIC_GAP + 60))
+VOLUME_FULL_SCRIPT="hs -c 'nativeVolumeUp()'"
+VOLUME_HALF_SCRIPT="hs -c 'nativeVolumeDown()'"
+VOLUME_MUTE_SCRIPT="hs -c 'nativeMute()'"
+CLOCK_STOPWATCH_TIME_OFFSET=60
+STOPWATCH_MENU_TIME_RIGHT_OFFSET=$((BAR_MARGIN + BAR_PADDING_RIGHT + STAT_STATS_SPAN_WIDTH + CLOCK_STAT_GAP + CLOCK_VPN_WIDTH - CLOCK_STOPWATCH_TIME_OFFSET))
 
 # Clear all items on reload.
 # Temporarily disabled while tuning stats overlays so graph histories survive reloads.
@@ -106,13 +107,13 @@ STOPWATCH_MENU_TIME_X_MIN=$((340 + 220 + MUSIC_LEFT_INSET + MUSIC_VOLUME_WIDTH +
 sketchybar --bar \
   position=bottom \
   height=$BAR_HEIGHT \
-  margin=340 \
+  margin=$BAR_MARGIN \
   color=$BAR_BG \
   corner_radius=$BAR_RADIUS \
   border_width=0 \
   blur_radius=0 \
-  padding_left=220 \
-  padding_right=322 \
+  padding_left=$BAR_PADDING_LEFT \
+  padding_right=$BAR_PADDING_RIGHT \
   sticky=on \
   topmost=window \
   shadow=off \
@@ -131,9 +132,9 @@ sketchybar --default \
   label.padding_left=4 \
   label.padding_right=4
 
-##### Left cluster: music #####
+##### Right gutter: music #####
 
-sketchybar --add item music.left_pad left \
+sketchybar --add item music.left_pad right \
   --set music.left_pad \
     width=$MUSIC_LEFT_INSET \
     icon.drawing=off \
@@ -142,7 +143,7 @@ sketchybar --add item music.left_pad left \
     padding_left=0 \
     padding_right=0
 
-sketchybar --add item music.prev left \
+sketchybar --add item music.prev right \
   --set music.prev \
     width=$MUSIC_PREV_WIDTH \
     icon="⏮" \
@@ -160,7 +161,7 @@ sketchybar --add item music.prev left \
     padding_right=0 \
     click_script="nowplaying-cli previous"
 
-sketchybar --add item music.prev_play_gap left \
+sketchybar --add item music.prev_play_gap right \
   --set music.prev_play_gap \
     width=$MUSIC_BUTTON_GAP \
     icon.drawing=off \
@@ -169,7 +170,7 @@ sketchybar --add item music.prev_play_gap left \
     padding_left=0 \
     padding_right=0
 
-sketchybar --add item music.play left \
+sketchybar --add item music.play right \
   --set music.play \
     width=$MUSIC_PLAY_WIDTH \
     icon="▶" \
@@ -190,7 +191,7 @@ sketchybar --add item music.play left \
     padding_right=0 \
     click_script="nowplaying-cli togglePlayPause"
 
-sketchybar --add item music.play_next_gap left \
+sketchybar --add item music.play_next_gap right \
   --set music.play_next_gap \
     width=$MUSIC_BUTTON_GAP \
     icon.drawing=off \
@@ -199,7 +200,7 @@ sketchybar --add item music.play_next_gap left \
     padding_left=0 \
     padding_right=0
 
-sketchybar --add item music.next left \
+sketchybar --add item music.next right \
   --set music.next \
     width=$MUSIC_CONTROL_WIDTH \
     icon="⏭" \
@@ -217,7 +218,7 @@ sketchybar --add item music.next left \
     padding_right=0 \
     click_script="nowplaying-cli next"
 
-sketchybar --add item music.artist left \
+sketchybar --add item music.artist right \
   --set music.artist \
     icon.drawing=off \
     label="Now Playing" \
@@ -226,15 +227,16 @@ sketchybar --add item music.artist left \
     label.max_chars=$MUSIC_PAGE_CHARS \
     label.width=$MUSIC_LABEL_WIDTH \
     label.align=left \
-    label.padding_left=8 \
+    label.padding_left=$MUSIC_ARTIST_LABEL_PADDING \
     label.padding_right=12 \
     label.y_offset=10 \
     label.color=$TEXT \
     background.drawing=off \
     padding_left=0 \
-    padding_right=0
+    padding_right=$MUSIC_ARTIST_LABEL_OFFSET \
+    click_script='open -a "Amazon Music"'
 
-sketchybar --add item music left \
+sketchybar --add item music right \
   --set music \
     icon.drawing=off \
     label="Nothing playing" \
@@ -243,16 +245,16 @@ sketchybar --add item music left \
     label.max_chars=$MUSIC_PAGE_CHARS \
     label.width=$MUSIC_LABEL_WIDTH \
     label.align=left \
-    label.padding_left=8 \
+    label.padding_left=$MUSIC_TITLE_LABEL_PADDING \
     label.padding_right=12 \
     label.y_offset=-11 \
     scroll_texts=off \
     background.drawing=off \
     padding_left=0 \
-    padding_right=2 \
+    padding_right=0 \
     click_script='open -a "Amazon Music"'
 
-sketchybar --add item music.volume_gap left \
+sketchybar --add item music.volume_gap right \
   --set music.volume_gap \
     width=$MUSIC_VOLUME_GAP \
     icon.drawing=off \
@@ -261,7 +263,7 @@ sketchybar --add item music.volume_gap left \
     padding_left=0 \
     padding_right=0
 
-sketchybar --add item music.volume left \
+sketchybar --add item music.volume right \
   --set music.volume \
     width=$MUSIC_VOLUME_WIDTH \
     icon.drawing=off \
@@ -307,7 +309,7 @@ sketchybar --add item music.volume.mute popup.music.volume \
     icon="🔇" \
     click_script="$VOLUME_MUTE_SCRIPT"
 
-sketchybar --add item music.right_pad left \
+sketchybar --add item music.right_pad right \
   --set music.right_pad \
     width=$MUSIC_RIGHT_INSET \
     icon.drawing=off \
@@ -329,7 +331,7 @@ sketchybar --set music \
   update_freq=4
 
 # Gap between music controls and clock pill.
-sketchybar --add item gap.clock_music left \
+sketchybar --add item gap.clock_music right \
   --set gap.clock_music \
     width=$MUSIC_GAP \
     icon.drawing=off \
@@ -338,9 +340,9 @@ sketchybar --add item gap.clock_music left \
     padding_left=0 \
     padding_right=0
 
-##### Left cluster: integrated two-clock pill #####
+##### Right gutter: integrated two-clock pill #####
 
-sketchybar --add item clock.vpn left \
+sketchybar --add item clock.vpn right \
   --set clock.vpn \
     icon.drawing=off \
     label="Mullvad ..." \
@@ -353,11 +355,11 @@ sketchybar --add item clock.vpn left \
     label.y_offset=-43 \
     background.drawing=off \
     padding_left=0 \
-    padding_right=0 \
+    padding_right=$CLOCK_TILE_LABEL_OFFSET \
     script="$PLUGIN_DIR/mullvad.sh" \
     update_freq=10
 
-sketchybar --add item clock.day left \
+sketchybar --add item clock.day right \
   --set clock.day \
     icon.drawing=off \
     label="MON" \
@@ -369,9 +371,9 @@ sketchybar --add item clock.day left \
     label.y_offset=28 \
     background.drawing=off \
     padding_left=0 \
-    padding_right=0
+    padding_right=$CLOCK_TILE_LABEL_OFFSET
 
-sketchybar --add item clock.month left \
+sketchybar --add item clock.month right \
   --set clock.month \
     icon.drawing=off \
     label="JUN 22" \
@@ -383,11 +385,11 @@ sketchybar --add item clock.month left \
     label.y_offset=-10 \
     background.drawing=off \
     padding_left=0 \
-    padding_right=0
+    padding_right=$CLOCK_TILE_LABEL_OFFSET
 
 # Selectable secondary timezone label. Its text is drawn separately from the
 # time value; clock_left_click.sh keeps the lower label band mode-independent.
-sketchybar --add item clock.left.tz left \
+sketchybar --add item clock.left.tz right \
   --set clock.left.tz \
     icon.drawing=off \
     label="AZ ▾" \
@@ -401,10 +403,10 @@ sketchybar --add item clock.left.tz left \
     label.padding_right=-14 \
     background.drawing=off \
     padding_left=0 \
-    padding_right=0 \
+    padding_right=$CLOCK_LEFT_TZ_LABEL_OFFSET \
     click_script="sketchybar --set clock.left popup.drawing=toggle"
 
-sketchybar --add item clock.left left \
+sketchybar --add item clock.left right \
   --set clock.left \
     width=$CLOCK_LEFT_WIDTH \
     icon.drawing=off \
@@ -429,7 +431,7 @@ sketchybar --add item clock.left left \
     update_freq=5 \
     click_script="$PLUGIN_DIR/clock_left_click.sh"
 
-sketchybar --add item clock.date left \
+sketchybar --add item clock.date right \
   --set clock.date \
     width=$CLOCK_DATE_WIDTH \
     icon.drawing=off \
@@ -440,7 +442,7 @@ sketchybar --add item clock.date left \
     click_script="$PLUGIN_DIR/mullvad.sh click"
 
 # Primary Arizona clock.
-sketchybar --add item clock left \
+sketchybar --add item clock right \
   --set clock \
     width=$CLOCK_TIME_WIDTH \
     icon.drawing=off \
@@ -541,7 +543,7 @@ sketchybar --add item clock.tz.stopwatch popup.clock.left \
     updates=when_shown \
     update_freq=0 \
     script="$PLUGIN_DIR/stopwatch.sh" \
-    click_script="STOPWATCH_MENU_TIME_X_MIN=$STOPWATCH_MENU_TIME_X_MIN $PLUGIN_DIR/stopwatch.sh menu_click"
+    click_script="STOPWATCH_MENU_TIME_RIGHT_OFFSET=$STOPWATCH_MENU_TIME_RIGHT_OFFSET $PLUGIN_DIR/stopwatch.sh menu_click"
 
 sketchybar --add event clock_update
 sketchybar --subscribe clock clock_update
@@ -637,6 +639,51 @@ sketchybar --add graph swap.graph right $STAT_GRAPH_WIDTH \
     padding_left=-1 \
     padding_right=0
 
+sketchybar --add item gap.clock_swap right \
+  --set gap.clock_swap \
+    width=$CLOCK_STAT_GAP \
+    icon.drawing=off \
+    label.drawing=off \
+    background.drawing=off \
+    padding_left=0 \
+    padding_right=0
+
+# All gutter content is right-positioned. Right-side order is built from the
+# right edge inward, so this keeps the visible layout: music | clock | stats.
+RIGHT_GUTTER_ORDER=(
+  cpu.total
+  gap.mem_cpu
+  gpu.graph
+  gap.mem_gpu
+  mem.graph
+  gap.swap_mem
+  swap.graph
+  gap.clock_swap
+  clock
+  clock.date
+  clock.left.tz
+  clock.left
+  gap.clock_music
+  music.right_pad
+  music.volume
+  music.volume_gap
+  music
+  music.artist
+  music.next
+  music.play_next_gap
+  music.play
+  music.prev_play_gap
+  music.prev
+  music.left_pad
+)
+
+sketchybar --set '/^(music(\.(left_pad|prev|prev_play_gap|play|play_next_gap|next|artist|volume_gap|volume|right_pad))?|gap\.(clock_music|clock_swap)|clock(\.(vpn|day|month|left(\.tz)?|date))?)$/' position=right
+sketchybar --reorder "${RIGHT_GUTTER_ORDER[@]}"
+sketchybar --move clock.left.tz after clock.left
+sketchybar --move clock.day after clock
+sketchybar --move clock.month after clock
+sketchybar --move clock.vpn after clock
+
 # Tile backgrounds.
 sketchybar --add bracket cpu.tile cpu.total \
   --set cpu.tile \
@@ -672,7 +719,7 @@ sketchybar --add bracket swap.tile swap.graph \
 
 # Fitted external backing. The real bar is transparent; this bracket tracks the
 # first/last visible objects without adding extra end padding.
-sketchybar --add bracket main.tile music.left_pad music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.volume_gap music.volume music.right_pad gap.clock_music clock.left clock.date clock swap.graph gap.swap_mem mem.graph gap.mem_gpu gpu.graph gap.mem_cpu cpu.total \
+sketchybar --add bracket main.tile music.left_pad music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.volume_gap music.volume music.right_pad gap.clock_music clock.left clock.date clock gap.clock_swap swap.graph gap.swap_mem mem.graph gap.mem_gpu gpu.graph gap.mem_cpu cpu.total \
   --set main.tile \
     background.color=$MAIN_CELL \
     background.height=$STAT_TILE_HEIGHT \

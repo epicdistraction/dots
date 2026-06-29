@@ -1,0 +1,42 @@
+#!/usr/bin/osascript -l JavaScript
+
+ObjC.import('Cocoa')
+ObjC.import('ApplicationServices')
+
+const NX_KEYTYPE_SOUND_UP = 0
+const NX_KEYTYPE_SOUND_DOWN = 1
+const NX_KEYTYPE_MUTE = 7
+
+const NSSystemDefined = 14
+const NX_SUBTYPE_AUX_CONTROL_BUTTONS = 8
+const kCGHIDEventTap = 0
+
+function postAuxKey(key) {
+  function post(down) {
+    const event = $.NSEvent.otherEventWithTypeLocationModifierFlagsTimestampWindowNumberContextSubtypeData1Data2(
+      NSSystemDefined,
+      $.NSMakePoint(0, 0),
+      down ? 0xa00 : 0xb00,
+      0,
+      0,
+      null,
+      NX_SUBTYPE_AUX_CONTROL_BUTTONS,
+      (key << 16) | ((down ? 0xa : 0xb) << 8),
+      -1
+    )
+
+    $.CGEventPost(kCGHIDEventTap, event.CGEvent)
+  }
+
+  post(true)
+  post(false)
+}
+
+function run(argv) {
+  const cmd = argv[0] || "up"
+
+  if (cmd === "up") postAuxKey(NX_KEYTYPE_SOUND_UP)
+  else if (cmd === "down") postAuxKey(NX_KEYTYPE_SOUND_DOWN)
+  else if (cmd === "mute") postAuxKey(NX_KEYTYPE_MUTE)
+  else throw new Error("usage: native-volume-key.jxa up|down|mute")
+}
