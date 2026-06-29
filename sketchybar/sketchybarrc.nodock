@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# No-dock mode:
+# - Keep the SketchyBar process/service alive
+# - Remove every item
+# - Hide the bar itself
+# - Let Rectangle reclaim the whole screen
+
+sketchybar --remove '/.*/' \
+           --bar hidden=on \
+                 height=1 \
+                 margin=0 \
+                 y_offset=0 \
+                 corner_radius=0 \
+                 border_width=0 \
+                 padding_left=0 \
+                 padding_right=0 \
+                 color=0x00000000
+
