@@ -12,12 +12,15 @@ RECTANGLE_DOMAIN="com.knollsoft.Rectangle"
 # Tune these as needed.
 DESKTOP_BOTTOM_GAP=140
 DESKTOP_WINDOW_GAP=20
+DESKTOP_TOP_GAP=0
 
-MOBILE_BOTTOM_GAP=70
+MOBILE_BOTTOM_GAP=0
 MOBILE_WINDOW_GAP=0
+MOBILE_TOP_GAP=30
 
 NODOCK_BOTTOM_GAP=0
 NODOCK_WINDOW_GAP=0
+NODOCK_TOP_GAP=0
 
 usage() {
   cat <<EOF
@@ -58,9 +61,11 @@ restart_rectangle() {
 apply_rectangle_values() {
   local bottom_gap="$1"
   local window_gap="$2"
+  local top_gap="$3"
 
   defaults write "$RECTANGLE_DOMAIN" screenEdgeGapBottom -int "$bottom_gap"
   defaults write "$RECTANGLE_DOMAIN" gapSize -float "$window_gap"
+  defaults write "$RECTANGLE_DOMAIN" screenEdgeGapTop -int "$top_gap"
 }
 
 apply_sketchybar_mode() {
@@ -85,21 +90,21 @@ apply_sketchybar_mode() {
 
 apply_desktop() {
   apply_sketchybar_mode desktop
-  apply_rectangle_values "$DESKTOP_BOTTOM_GAP" "$DESKTOP_WINDOW_GAP"
+  apply_rectangle_values "$DESKTOP_BOTTOM_GAP" "$DESKTOP_WINDOW_GAP" "$DESKTOP_TOP_GAP"
   restart_rectangle
   notify "Desktop mode applied"
 }
 
 apply_mobile() {
   apply_sketchybar_mode mobile
-  apply_rectangle_values "$MOBILE_BOTTOM_GAP" "$MOBILE_WINDOW_GAP"
+  apply_rectangle_values "$MOBILE_BOTTOM_GAP" "$MOBILE_WINDOW_GAP" "$MOBILE_TOP_GAP"
   restart_rectangle
   notify "Mobile mode applied"
 }
 
 apply_nodock() {
   apply_sketchybar_mode nodock
-  apply_rectangle_values "$NODOCK_BOTTOM_GAP" "$NODOCK_WINDOW_GAP"
+  apply_rectangle_values "$NODOCK_BOTTOM_GAP" "$NODOCK_WINDOW_GAP" "$NODOCK_TOP_GAP"
   restart_rectangle
   notify "No-dock mode applied"
 }

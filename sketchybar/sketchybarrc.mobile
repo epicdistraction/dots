@@ -30,82 +30,81 @@ TZ_CYAN=0xff9bf6ff
 TZ_NEUTRAL=0xffd0dce0
 TZ_RED=0xffff9db4
 
-BAR_HEIGHT=170
-BAR_RADIUS=20
-BAR_MARGIN=340
-BAR_PADDING_LEFT=220
-BAR_PADDING_RIGHT=322
-STAT_TILE_HEIGHT=140
-STAT_RADIUS=12
-STAT_ITEM_GAP=20
-STAT_STATS_SPAN_WIDTH=930
+BAR_HEIGHT=60
+BAR_RADIUS=0
+BAR_MARGIN=0
+BAR_PADDING_LEFT=0
+BAR_PADDING_RIGHT=0
+STAT_TILE_HEIGHT=52
+STAT_RADIUS=6
+STAT_ITEM_GAP=8
+STAT_CPU_RIGHT_GAP=28
+STAT_STATS_SPAN_WIDTH=700
 STAT_GRAPH_COUNT=4
 STAT_GAP_COUNT=$((STAT_GRAPH_COUNT - 1))
 STAT_GRAPH_WIDTH=$(((STAT_STATS_SPAN_WIDTH - STAT_GAP_COUNT * STAT_ITEM_GAP) / STAT_GRAPH_COUNT))
 STAT_STATS_REMAINDER=$((STAT_STATS_SPAN_WIDTH - STAT_GRAPH_COUNT * STAT_GRAPH_WIDTH - STAT_GAP_COUNT * STAT_ITEM_GAP))
 STAT_SWAP_MEM_GAP=$((STAT_ITEM_GAP + STAT_STATS_REMAINDER))
-STAT_LABEL_TOP_INSET=8
-STAT_LABEL_DOWN_SHIFT=110
+STAT_LABEL_TOP_INSET=5
+STAT_LABEL_DOWN_SHIFT=38
 STAT_LABEL_Y_OFFSET=$((STAT_TILE_HEIGHT / 2 - STAT_LABEL_TOP_INSET - STAT_LABEL_DOWN_SHIFT))
 STAT_PILL_BG=0xff182c2f
-STAT_PILL_HEIGHT=22
+STAT_PILL_HEIGHT=18
 STAT_PILL_Y_OFFSET=$((STAT_LABEL_Y_OFFSET + 2))
-STAT_PILL_RADIUS=6
+STAT_PILL_RADIUS=5
 STAT_PILL_X_PADDING=2
-STAT_LABEL_CHAR_WIDTH=9
-STAT_CPU_LABEL_WIDTH_TRIM=8
+STAT_LABEL_CHAR_WIDTH=7
+STAT_CPU_LABEL_WIDTH_TRIM=0
 STAT_CPU_LABEL_WIDTH=$((18 * STAT_LABEL_CHAR_WIDTH + 2 * STAT_PILL_X_PADDING - STAT_CPU_LABEL_WIDTH_TRIM))
 STAT_SMALL_LABEL_WIDTH=$((16 * STAT_LABEL_CHAR_WIDTH + 2 * STAT_PILL_X_PADDING))
 STAT_CPU_LABEL_OFFSET=$((-(STAT_GRAPH_WIDTH + STAT_CPU_LABEL_WIDTH) / 2))
 STAT_SMALL_LABEL_OFFSET=$((-(STAT_GRAPH_WIDTH + STAT_SMALL_LABEL_WIDTH) / 2))
 CLOCK_TILE_HEIGHT=$STAT_TILE_HEIGHT
-CLOCK_LEFT_WIDTH=165
-CLOCK_DATE_WIDTH=82
-CLOCK_TIME_WIDTH=180
+CLOCK_LEFT_WIDTH=108
+CLOCK_DATE_WIDTH=76
+CLOCK_TIME_WIDTH=146
 CLOCK_VPN_WIDTH=$((CLOCK_LEFT_WIDTH + CLOCK_DATE_WIDTH + CLOCK_TIME_WIDTH))
 CLOCK_STAT_GAP=$STAT_ITEM_GAP
-CLOCK_TILE_LABEL_OFFSET=-165
+CLOCK_TILE_LABEL_OFFSET=-125
 CLOCK_LEFT_TZ_LABEL_OFFSET=$((-CLOCK_LEFT_WIDTH))
-MUSIC_GAP=$((STAT_ITEM_GAP + 15))
-MUSIC_CONTROL_WIDTH=46
-MUSIC_LEFT_INSET=18
-MUSIC_RIGHT_INSET=$MUSIC_LEFT_INSET
-MUSIC_BUTTON_GAP=5
-MUSIC_VOLUME_WIDTH=34
-MUSIC_VOLUME_GAP=7
-MUSIC_VOLUME_BUTTON_HEIGHT=34
-MUSIC_VOLUME_BUTTON_RADIUS=8
-MUSIC_VOLUME_POPUP_HEIGHT=40
-MUSIC_VOLUME_POPUP_Y_OFFSET=130
-MUSIC_PREV_WIDTH=46
-MUSIC_PLAY_WIDTH=64
+VPN_CELL_WIDTH=240
+VPN_LABEL_WIDTH=$VPN_CELL_WIDTH
+VPN_MUSIC_GAP=8
+MUSIC_GAP=16
+MUSIC_CONTROL_WIDTH=38
+MUSIC_LEFT_INSET=0
+MUSIC_RIGHT_INSET=10
+MUSIC_BUTTON_GAP=4
+MUSIC_PREV_WIDTH=38
+MUSIC_PLAY_WIDTH=52
 MUSIC_CONTROL_HEIGHT=$STAT_TILE_HEIGHT
-MUSIC_BUTTON_HEIGHT=72
-MUSIC_BUTTON_RADIUS=12
+MUSIC_BUTTON_HEIGHT=46
+MUSIC_BUTTON_RADIUS=6
 MUSIC_BUTTON_BG=0x33000000
-MUSIC_TRACK_WIDTH=360
+MUSIC_TRACK_WIDTH=220
 MUSIC_LABEL_WIDTH=$MUSIC_TRACK_WIDTH
-MUSIC_TITLE_LABEL_PADDING=10
-MUSIC_ARTIST_LABEL_PADDING=10
+MUSIC_TITLE_LABEL_PADDING=8
+MUSIC_ARTIST_LABEL_PADDING=8
 MUSIC_ARTIST_LABEL_OFFSET=$((-(MUSIC_TRACK_WIDTH + 0)))
 MUSIC_TRACK_HEIGHT=$STAT_TILE_HEIGHT
 MUSIC_RADIUS=$STAT_RADIUS
 MUSIC_PAGE_CHARS=60
-VOLUME_FULL_SCRIPT="hs -c 'nativeVolumeUp()'"
-VOLUME_HALF_SCRIPT="hs -c 'nativeVolumeDown()'"
-VOLUME_MUTE_SCRIPT="hs -c 'nativeMute()'"
-CLOCK_STOPWATCH_TIME_OFFSET=60
+CLOCK_STOPWATCH_TIME_OFFSET=54
 STOPWATCH_MENU_TIME_RIGHT_OFFSET=$((BAR_MARGIN + BAR_PADDING_RIGHT + STAT_STATS_SPAN_WIDTH + CLOCK_STAT_GAP + CLOCK_VPN_WIDTH - CLOCK_STOPWATCH_TIME_OFFSET))
 
 # Clear all items on reload.
 # Temporarily disabled while tuning stats overlays so graph histories survive reloads.
 # sketchybar --remove '/.*/' 2>/dev/null
+sketchybar --remove '/^music\.volume(\..*)?$/' 2>/dev/null || true
+sketchybar --remove music.volume_gap 2>/dev/null || true
+sketchybar --remove clock.vpn 2>/dev/null || true
+sketchybar --remove gap.vpn_music 2>/dev/null || true
+sketchybar --remove vpn.tile 2>/dev/null || true
 
 ##### Bottom gutter bar #####
-# Keep the asymmetric fake margin layout:
-# real margin = 340; internal right padding fakes the 640px right boundary.
+# Mobile owns the full-width bottom gutter.
 sketchybar --bar \
-  position=bottom \
+  position=top \
   height=$BAR_HEIGHT \
   margin=$BAR_MARGIN \
   color=$BAR_BG \
@@ -147,7 +146,7 @@ sketchybar --add item music.prev right \
   --set music.prev \
     width=$MUSIC_PREV_WIDTH \
     icon="⏮" \
-    icon.font="Hack Nerd Font:Bold:22.0" \
+    icon.font="Hack Nerd Font:Bold:17.0" \
     icon.width=$MUSIC_PREV_WIDTH \
     icon.align=center \
     icon.padding_left=0 \
@@ -174,7 +173,7 @@ sketchybar --add item music.play right \
   --set music.play \
     width=$MUSIC_PLAY_WIDTH \
     icon="▶" \
-    icon.font="Hack Nerd Font:Bold:30.0" \
+    icon.font="Hack Nerd Font:Bold:22.0" \
     icon.width=$MUSIC_PLAY_WIDTH \
     icon.align=center \
     icon.padding_left=0 \
@@ -185,7 +184,7 @@ sketchybar --add item music.play right \
     background.height=$MUSIC_BUTTON_HEIGHT \
     background.corner_radius=$MUSIC_BUTTON_RADIUS \
     background.image.drawing=off \
-    background.image.scale=1.0 \
+    background.image.scale=0.72 \
     background.image.corner_radius=$MUSIC_BUTTON_RADIUS \
     padding_left=0 \
     padding_right=0 \
@@ -204,7 +203,7 @@ sketchybar --add item music.next right \
   --set music.next \
     width=$MUSIC_CONTROL_WIDTH \
     icon="⏭" \
-    icon.font="Hack Nerd Font:Bold:22.0" \
+    icon.font="Hack Nerd Font:Bold:17.0" \
     icon.width=$MUSIC_CONTROL_WIDTH \
     icon.align=center \
     icon.padding_left=0 \
@@ -223,13 +222,13 @@ sketchybar --add item music.artist right \
     icon.drawing=off \
     label="Now Playing" \
     width=0 \
-    label.font="Hack Nerd Font:Bold:16.0" \
+    label.font="Hack Nerd Font:Bold:12.0" \
     label.max_chars=$MUSIC_PAGE_CHARS \
     label.width=$MUSIC_LABEL_WIDTH \
     label.align=left \
     label.padding_left=$MUSIC_ARTIST_LABEL_PADDING \
-    label.padding_right=12 \
-    label.y_offset=10 \
+    label.padding_right=10 \
+    label.y_offset=8 \
     label.color=$TEXT \
     background.drawing=off \
     padding_left=0 \
@@ -241,73 +240,18 @@ sketchybar --add item music right \
     icon.drawing=off \
     label="Nothing playing" \
     width=$MUSIC_TRACK_WIDTH \
-    label.font="Hack Nerd Font:Bold:16.0" \
+    label.font="Hack Nerd Font:Bold:12.0" \
     label.max_chars=$MUSIC_PAGE_CHARS \
     label.width=$MUSIC_LABEL_WIDTH \
     label.align=left \
     label.padding_left=$MUSIC_TITLE_LABEL_PADDING \
-    label.padding_right=12 \
-    label.y_offset=-11 \
+    label.padding_right=10 \
+    label.y_offset=-9 \
     scroll_texts=off \
     background.drawing=off \
     padding_left=0 \
     padding_right=0 \
     click_script='open -a "Amazon Music"'
-
-sketchybar --add item music.volume_gap right \
-  --set music.volume_gap \
-    width=$MUSIC_VOLUME_GAP \
-    icon.drawing=off \
-    label.drawing=off \
-    background.drawing=off \
-    padding_left=0 \
-    padding_right=0
-
-sketchybar --add item music.volume right \
-  --set music.volume \
-    width=$MUSIC_VOLUME_WIDTH \
-    icon.drawing=off \
-    label.drawing=off \
-    background.drawing=off \
-    padding_left=0 \
-    padding_right=0 \
-    popup.drawing=on \
-    popup.horizontal=off \
-    popup.align=center \
-    popup.height=$MUSIC_VOLUME_POPUP_HEIGHT \
-    popup.y_offset=$MUSIC_VOLUME_POPUP_Y_OFFSET \
-    popup.background.drawing=off
-
-VOLUME_POPUP_COMMON=(
-  width=$MUSIC_VOLUME_WIDTH
-  icon.font="Apple Color Emoji:Regular:12.0"
-  icon.width=$MUSIC_VOLUME_WIDTH
-  icon.align=center
-  icon.padding_left=0
-  icon.padding_right=0
-  label.drawing=off
-  background.drawing=on
-  background.color=$MUSIC_BUTTON_BG
-  background.height=$MUSIC_VOLUME_BUTTON_HEIGHT
-  background.corner_radius=$MUSIC_VOLUME_BUTTON_RADIUS
-  padding_left=0
-  padding_right=0
-)
-
-sketchybar --add item music.volume.full popup.music.volume \
-  --set music.volume.full "${VOLUME_POPUP_COMMON[@]}" \
-    icon="🔊" \
-    click_script="$VOLUME_FULL_SCRIPT"
-
-sketchybar --add item music.volume.half popup.music.volume \
-  --set music.volume.half "${VOLUME_POPUP_COMMON[@]}" \
-    icon="🔉" \
-    click_script="$VOLUME_HALF_SCRIPT"
-
-sketchybar --add item music.volume.mute popup.music.volume \
-  --set music.volume.mute "${VOLUME_POPUP_COMMON[@]}" \
-    icon="🔇" \
-    click_script="$VOLUME_MUTE_SCRIPT"
 
 sketchybar --add item music.right_pad right \
   --set music.right_pad \
@@ -318,7 +262,7 @@ sketchybar --add item music.right_pad right \
     padding_left=0 \
     padding_right=0
 
-sketchybar --add bracket music.tile music.left_pad music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.volume_gap music.volume music.right_pad \
+sketchybar --add bracket music.tile music.left_pad music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.right_pad \
   --set music.tile \
     background.color=$PANEL_STRONG \
     background.height=$MUSIC_TRACK_HEIGHT \
@@ -346,29 +290,41 @@ sketchybar --add item clock.vpn right \
   --set clock.vpn \
     icon.drawing=off \
     label="Mullvad ..." \
-    width=0 \
-    label.font="Hack Nerd Font:Bold:15.0" \
-    label.max_chars=44 \
-    label.width=$CLOCK_VPN_WIDTH \
+    width=$VPN_CELL_WIDTH \
+    label.font="Hack Nerd Font:Bold:12.0" \
+    label.max_chars=38 \
+    label.width=$VPN_LABEL_WIDTH \
     label.align=center \
+    label.padding_left=0 \
+    label.padding_right=0 \
     label.color=$TEXT \
-    label.y_offset=-43 \
+    label.y_offset=-10 \
     background.drawing=off \
     padding_left=0 \
-    padding_right=$CLOCK_TILE_LABEL_OFFSET \
+    padding_right=0 \
     script="$PLUGIN_DIR/mullvad.sh" \
-    update_freq=10
+    update_freq=10 \
+    click_script="$PLUGIN_DIR/mullvad.sh click"
+
+sketchybar --add item gap.vpn_music right \
+  --set gap.vpn_music \
+    width=$VPN_MUSIC_GAP \
+    icon.drawing=off \
+    label.drawing=off \
+    background.drawing=off \
+    padding_left=0 \
+    padding_right=0
 
 sketchybar --add item clock.day right \
   --set clock.day \
     icon.drawing=off \
     label="MON" \
     width=0 \
-    label.font="Hack Nerd Font:Bold:18.0" \
+    label.font="Hack Nerd Font:Bold:11.0" \
     label.width=$CLOCK_VPN_WIDTH \
     label.align=center \
     label.color=$CYAN \
-    label.y_offset=28 \
+    label.y_offset=6 \
     background.drawing=off \
     padding_left=0 \
     padding_right=$CLOCK_TILE_LABEL_OFFSET
@@ -378,11 +334,11 @@ sketchybar --add item clock.month right \
     icon.drawing=off \
     label="JUN 22" \
     width=0 \
-    label.font="Hack Nerd Font:Bold:18.0" \
+    label.font="Hack Nerd Font:Bold:11.0" \
     label.width=$CLOCK_VPN_WIDTH \
     label.align=center \
     label.color=$CYAN \
-    label.y_offset=-10 \
+    label.y_offset=-8 \
     background.drawing=off \
     padding_left=0 \
     padding_right=$CLOCK_TILE_LABEL_OFFSET
@@ -394,13 +350,13 @@ sketchybar --add item clock.left.tz right \
     icon.drawing=off \
     label="AZ ▾" \
     width=0 \
-    label.font="Hack Nerd Font:Bold:17.0" \
+    label.font="Hack Nerd Font:Bold:10.0" \
     label.width=$CLOCK_LEFT_WIDTH \
     label.align=center \
     label.color=$BLUE \
-    label.y_offset=-6 \
-    label.padding_left=14 \
-    label.padding_right=-14 \
+    label.y_offset=-12 \
+    label.padding_left=8 \
+    label.padding_right=-8 \
     background.drawing=off \
     padding_left=0 \
     padding_right=$CLOCK_LEFT_TZ_LABEL_OFFSET \
@@ -411,22 +367,22 @@ sketchybar --add item clock.left right \
     width=$CLOCK_LEFT_WIDTH \
     icon.drawing=off \
     label="--:--" \
-    label.font="Hack Nerd Font:Bold:24.0" \
+    label.font="Hack Nerd Font:Bold:15.0" \
     label.color=$TEXT \
     label.width=$CLOCK_LEFT_WIDTH \
     label.align=center \
-    label.y_offset=22 \
+    label.y_offset=9 \
     label.padding_left=0 \
     label.padding_right=0 \
     background.drawing=off \
-    padding_left=14 \
+    padding_left=8 \
     padding_right=0 \
     popup.drawing=off \
     popup.horizontal=off \
     popup.height=34 \
     popup.blur_radius=20 \
     popup.background.color=$PANEL_STRONG \
-    popup.background.corner_radius=14 \
+    popup.background.corner_radius=8 \
     script="$PLUGIN_DIR/clock.sh" \
     update_freq=5 \
     click_script="$PLUGIN_DIR/clock_left_click.sh"
@@ -437,7 +393,7 @@ sketchybar --add item clock.date right \
     icon.drawing=off \
     label.drawing=off \
     background.drawing=off \
-    padding_left=-18 \
+    padding_left=-8 \
     padding_right=0 \
     click_script="$PLUGIN_DIR/mullvad.sh click"
 
@@ -447,16 +403,16 @@ sketchybar --add item clock right \
     width=$CLOCK_TIME_WIDTH \
     icon.drawing=off \
     label="12:52 PM" \
-    label.font="Hack Nerd Font:Bold:37.0" \
+    label.font="Hack Nerd Font:Bold:22.0" \
     label.color=$TEXT \
     label.width=$CLOCK_TIME_WIDTH \
     label.align=center \
-    label.y_offset=11 \
+    label.y_offset=1 \
     label.padding_left=0 \
     label.padding_right=0 \
     background.drawing=off \
     padding_left=0 \
-    padding_right=8 \
+    padding_right=4 \
     script="$PLUGIN_DIR/clock.sh" \
     update_freq=5 \
     click_script="open -a Calendar"
@@ -466,6 +422,14 @@ sketchybar --add bracket clock.tile clock.left clock.date clock \
   --set clock.tile \
     background.color=$PANEL_STRONG \
     background.height=$CLOCK_TILE_HEIGHT \
+    background.corner_radius=$STAT_RADIUS \
+    background.border_width=0 \
+    background.border_color=0x00000000
+
+sketchybar --add bracket vpn.tile clock.vpn \
+  --set vpn.tile \
+    background.color=$PANEL_STRONG \
+    background.height=$STAT_TILE_HEIGHT \
     background.corner_radius=$STAT_RADIUS \
     background.border_width=0 \
     background.border_color=0x00000000
@@ -552,9 +516,18 @@ sketchybar --subscribe clock.vpn clock_update
 
 ##### Right cluster: graph-only stats with anchored overlays #####
 # Add right-side graphs/gaps in this order so visible order is:
-# SWP | 22px | MEM | 20px | GPU | 20px | CPU.
-# 930px span = 4 equal graph cells + 3 gaps; the 2px integer remainder
+# SWP | 8px | MEM | 8px | GPU | 8px | CPU.
+# 700px span = 4 equal graph cells + 3 gaps; any integer remainder
 # rides in the leftmost stat gap so the swap-left edge lands exactly.
+
+sketchybar --add item gap.cpu_right right \
+  --set gap.cpu_right \
+    width=$STAT_CPU_RIGHT_GAP \
+    icon.drawing=off \
+    label.drawing=off \
+    background.drawing=off \
+    padding_left=0 \
+    padding_right=0
 
 # CPU graph, rightmost.
 sketchybar --add graph cpu.total right $STAT_GRAPH_WIDTH \
@@ -649,8 +622,9 @@ sketchybar --add item gap.clock_swap right \
     padding_right=0
 
 # All gutter content is right-positioned. Right-side order is built from the
-# right edge inward, so this keeps the visible layout: music | clock | stats.
+# right edge inward, so this keeps the visible layout: clock | music | VPN | stats.
 RIGHT_GUTTER_ORDER=(
+  gap.cpu_right
   cpu.total
   gap.mem_cpu
   gpu.graph
@@ -659,14 +633,9 @@ RIGHT_GUTTER_ORDER=(
   gap.swap_mem
   swap.graph
   gap.clock_swap
-  clock
-  clock.date
-  clock.left.tz
-  clock.left
-  gap.clock_music
+  clock.vpn
+  gap.vpn_music
   music.right_pad
-  music.volume
-  music.volume_gap
   music
   music.artist
   music.next
@@ -675,14 +644,21 @@ RIGHT_GUTTER_ORDER=(
   music.prev_play_gap
   music.prev
   music.left_pad
+  gap.clock_music
+  clock
+  clock.date
+  clock.left.tz
+  clock.left
 )
 
-sketchybar --set '/^(music(\.(left_pad|prev|prev_play_gap|play|play_next_gap|next|artist|volume_gap|volume|right_pad))?|gap\.(clock_music|clock_swap)|clock(\.(vpn|day|month|left(\.tz)?|date))?)$/' position=right
+sketchybar --set '/^(music(\.(left_pad|prev|prev_play_gap|play|play_next_gap|next|artist|right_pad))?|gap\.(cpu_right|clock_music|clock_swap|vpn_music)|clock(\.(vpn|day|month|left(\.tz)?|date))?)$/' position=right
 sketchybar --reorder "${RIGHT_GUTTER_ORDER[@]}"
 sketchybar --move clock.left.tz after clock.left
 sketchybar --move clock.day after clock
 sketchybar --move clock.month after clock
-sketchybar --move clock.vpn after clock
+sketchybar --move clock.vpn after gap.clock_swap
+sketchybar --move gap.vpn_music after clock.vpn
+sketchybar --move gap.clock_music after music.left_pad
 
 # Tile backgrounds.
 sketchybar --add bracket cpu.tile cpu.total \
@@ -719,7 +695,7 @@ sketchybar --add bracket swap.tile swap.graph \
 
 # Fitted external backing. The real bar is transparent; this bracket tracks the
 # first/last visible objects without adding extra end padding.
-sketchybar --add bracket main.tile music.left_pad music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.volume_gap music.volume music.right_pad gap.clock_music clock.left clock.date clock gap.clock_swap swap.graph gap.swap_mem mem.graph gap.mem_gpu gpu.graph gap.mem_cpu cpu.total \
+sketchybar --add bracket main.tile clock.left clock.date clock gap.clock_music music.left_pad music.prev music.prev_play_gap music.play music.play_next_gap music.next music.artist music music.right_pad gap.vpn_music clock.vpn gap.clock_swap swap.graph gap.swap_mem mem.graph gap.mem_gpu gpu.graph gap.mem_cpu cpu.total \
   --set main.tile \
     background.color=$MAIN_CELL \
     background.height=$STAT_TILE_HEIGHT \
@@ -735,7 +711,7 @@ sketchybar --add item cpu.stat_label right \
     width=0 \
     label.width=$STAT_CPU_LABEL_WIDTH \
     label.align=center \
-    label.font="Hack Nerd Font:Bold:15.0" \
+    label.font="Hack Nerd Font:Bold:10.0" \
     label.color=$CYAN \
     label.y_offset=$STAT_LABEL_Y_OFFSET \
     label.padding_left=0 \
@@ -759,7 +735,7 @@ sketchybar --add item gpu.stat_label right \
     width=0 \
     label.width=$STAT_CPU_LABEL_WIDTH \
     label.align=center \
-    label.font="Hack Nerd Font:Bold:15.0" \
+    label.font="Hack Nerd Font:Bold:10.0" \
     label.color=$GREEN \
     label.y_offset=$STAT_LABEL_Y_OFFSET \
     label.padding_left=0 \
@@ -783,7 +759,7 @@ sketchybar --add item mem.stat_label right \
     width=0 \
     label.width=$STAT_SMALL_LABEL_WIDTH \
     label.align=center \
-    label.font="Hack Nerd Font:Bold:15.0" \
+    label.font="Hack Nerd Font:Bold:10.0" \
     label.color=$BLUE \
     label.y_offset=$STAT_LABEL_Y_OFFSET \
     label.padding_left=0 \
@@ -807,7 +783,7 @@ sketchybar --add item swap.stat_label right \
     width=0 \
     label.width=$STAT_SMALL_LABEL_WIDTH \
     label.align=center \
-    label.font="Hack Nerd Font:Bold:15.0" \
+    label.font="Hack Nerd Font:Bold:10.0" \
     label.color=$ORANGE \
     label.y_offset=$STAT_LABEL_Y_OFFSET \
     label.padding_left=0 \
@@ -829,6 +805,6 @@ sketchybar --add item stats.driver right \
     drawing=off \
     updates=on \
     update_freq=2 \
-    script="$PLUGIN_DIR/stats_push.sh"
+    script="STAT_LABEL_CHAR_WIDTH=$STAT_LABEL_CHAR_WIDTH STAT_PILL_X_PADDING=$STAT_PILL_X_PADDING STAT_CPU_LABEL_WIDTH_TRIM=$STAT_CPU_LABEL_WIDTH_TRIM STAT_ITEM_GAP=$STAT_ITEM_GAP STAT_STATS_SPAN_WIDTH=$STAT_STATS_SPAN_WIDTH STAT_GRAPH_COUNT=$STAT_GRAPH_COUNT $PLUGIN_DIR/stats_push.sh"
 
 sketchybar --update
